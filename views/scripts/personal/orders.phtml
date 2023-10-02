@@ -1,0 +1,42 @@
+<br>
+<?php if ($this->items) : ?>
+
+<table class="light" width="100%">
+<tr>
+	<th><?= $this->translate('Номер заказа') ?></th>
+	<?php /*
+	<th><?= $this->translate('Доставка') ?></th>
+	<th><?= $this->translate('Способ оплаты') ?></th>
+	*/?>
+	<th><?= $this->translate('Стоимость заказа') ?></th>
+	<th><?= $this->translate('Сайт') ?></th>
+	<th><?= $this->translate('Дата заказа') ?></th>
+	<?php /*<th><?= $this->translate('Статус') ?></th>*/?>
+</tr>
+<?php foreach ($this->items as $item) : ?>
+	<tr>
+		<td align="center"><a href="<?= $this->url(array('id' => $item->id, 'page' => $this->currentPage), 'shop::personalOrder') ?>" 
+				><big>Заказ №<?= $item->number ?></big></a>
+		</td>
+		<?php /*
+		<td><?= $item->params->deliveryName ?></td>
+		<td><?= $item->params->paymentMethodName ?></td>
+		*/?>
+		<td align="right" nowrap="nowrap"><?= Lv7_Service_Text::asPrice($item->params->totalCost, 2) ?> р.</td>
+		<td align="center"><?= $this->sites[$item->site]->label ?></td>
+		<td align="center"><?= $this->showDate($item->created) ?></td>
+		<?php /*<td align="center"><?= $item->statusName ? $item->statusName : '---' ?></td>*/?>
+	</tr>   
+<?php endforeach; ?>
+</table>
+
+<div class="buttons-paginator-box">
+<?= $this->paginator ?>
+</div>
+
+<?php else: ?>
+
+<p><?= $this->translate('Вы пока не сделали ни одного заказа') ?></p>
+
+<?php endif; ?>
+

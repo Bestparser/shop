@@ -1,0 +1,136 @@
+<?php $deliveryDays = array(); ?>
+<?php if ($this->items): ?>
+	<?php
+	$stockErrors = false;
+	?>
+	<form method="POST" action="<?= Shop_Service_Config::getScheme()->getBasketUrl() ?>" id="shop-basket-form-full">
+	<table class="light" width="100%">
+		<tr>
+			<th>&nbsp;</th>
+			<th><code><?= $this->translate('Код') ?></code><br><?= $this->translate('Название') ?></th>
+			<th><?= $this->translate('Артикул') ?></th>
+			<th><?= $this->translate('Кол-во') ?></th>
+			<th><?= $this->translate('Стоимость') ?></th>
+			<th><?= $this->translate('Удалить') ?></th>
+		</tr>
+		<?php foreach ($this->items as $item): ?>
+			<?php
+			$stockError = $item->getStock() && ($item->getQuantity() > $item->getStock()) && $item->getSupplier() > 1;
+			if ($stockError) {
+				$stockErrors = true;
+			}
+			?>
+			<tr>
+				<td class="image"><?php
+				$imageUrl = $item->getImageUrl();
+				if (strlen($imageUrl)) :?>
+					<a href="<?= $imageUrl ?>" class="fancybox" title="<?= $this->escape($item->getName()) ?>">
+						<img src="<?= $item->getPreviewUrl() ?>" width="50" height="50" /></a>
+				<?php endif; ?></td>
+				<td>
+					<?php
+					$code = $item->getCode();
+					$supplier = Distrib_Service_Facade::getInstance()->getSupplier($item->getSupplier());
+					if ($supplier->id != 1) {
+						$unitMapper = new Distrib_Model_Mapper_Units();
+						$findUnit = $unitMapper->find($item->getId());
+						if (!empty($findUnit)) {
+						$toolsService = new Distrib_Service_Tools();
+						$getUnitParams = $toolsService->setUnitParams($findUnit, $supplier);
+							if (!empty($getUnitParams) && isset($getUnitParams->frontDelivery)) {
+								$deliveryDays[] = $getUnitParams->frontDelivery;
+							}
+						} else if ($supplier->delivery >= 1) {
+								$deliveryDays[] = $supplier->delivery;
+						}
+					}
+					if (strlen($code)): ?>
+						<code><?= $code ?></code><br>
+					<?php endif; ?>
+					<?php if (strlen($item->getItemUrl())): ?>
+						<a href="<?= $item->getItemUrl() ?>"><?= $item->getName() ?></a>
+					<?php else: ?>
+						<?= $item->getName() ?>
+					<?php endif; ?>
+				</td>
+				<td class="wbr max-w-100"><?= $item->getArticul() ?></td>
+				<td class="slim">
+					<div class="clearfix">
+						<?= $this->formText('q_' . $item->getUid(), $item->getQuantity(), array(
+						'size' => 5,
+						'class' => 'shop-basket-input',
+						'onfocus' => 'this.select();'
+						)) ?>
+						<input type="hidden" name="min_order" value="<?= $item->getMinOrder() ? $item->getMinOrder() : '1'; ?>" id="min_order">
+						<ul class="shop-basket-substitution">
+							<li><a href="#">1</a></li>
+							<li><a href="#">2</a></li>
+							<li><a href="#">3</a></li>
+							<li><a href="#">4</a></li>
+							<li><a href="#">5</a></li>
+							<li><a href="#" class="more"><?= $this->translate('больше') ?></a></li>
+							<li><a href="#" class="delete"><?= $this->translate('удалить') ?></a></li>
+						</ul>
+					</div>
+					<?php if ($item->getStock()): ?>
+						<div class="shop-basket-confirm" style="display:none;"><span class="maximumQty" style="display:none;"><?= $item->getStock() ?></span>Доступно для заказа: <?= $item->getStock() ?>  шт.</div>
+						<div class="text-center small <?= $stockError ? 'text-block danger' : '' ?>">max: <?= $item->getStock() ?></div>
+					<?php endif; ?>
+				</td>
+				<td class="price">
+					<?php if ($item->getQuantity() > 1): ?>
+						<small><small>
+							<?= Lv7_Service_Text::asPrice($item->getPrice(), 2) ?> x <?= $item->getQuantity() ?> =
+						</small></small>
+						<br>
+					<?php endif; ?>
+					<?= Lv7_Service_Text::asPrice($item->getTotalPrice(), 2) ?> р.
+				</td>
+				<td align="center"><a href="<?= Shop_Service_Config::getScheme()->getBasketUrl() ?>?uid=<?= $item->getUid() ?>"
+					class="del"><?= $this->translate('удалить') ?></a></td>
+			</tr>
+		<?php endforeach; ?>
+		<tr class="total">
+			<td colspan="3"><?= $this->translate('Итого') ?></td>
+			<td align="center"><?= $this->quantity ?></td>
+			<td class="price"><?= Lv7_Service_Text::asPrice($this->cost, 2) ?> р.</td>
+			<td colspan="2">&nbsp;</td>
+		</tr>
+	</table>
+
+	<?php if (!empty($deliveryDays)): ?>
+	<div class="alert alert-warning" role="alert"><strong>Внимание!</strong> В заказе имеются товары со сроком поставки: <strong><?= max($deliveryDays); ?> раб. дн.</strong></div>
+    <?php endif;?>
+
+	<div class="tRight">
+	<p><?= $this->formSubmit('submit', $this->translate('Обновить'), array(
+		'class' => 'button-disabled',
+	)) ?></p>
+	</div>
+	</form>
+	<br>
+
+	<?php if ($this->smallOrderAmount): ?>
+		<div class="alert alert-info text-center mb-10">
+			<i class="fa fa-warning"></i> <strong>Внимание!</strong> <br>
+			Минимальная сумма заказа с доставкой в нашем магазине
+			составляет <?= $this->minOrderAmount ?> р. Способ получения товара для данного заказа
+			возможен "Самовывоз"<?php if ($this->tecdoc == 0){ ?> или "Яндекс доставка".<?php } ?>
+		</div>
+	<?php endif; ?>
+
+	<?php if ($stockErrors): ?>
+		<div class="alert alert-warning text-center mb-10">
+			<i class="fa fa-warning"></i> <strong>Внимание!</strong>
+			<br>Вы заказываете кол-во товара большее, чем есть в данный момент на складе.
+			<br>Пожалуйста, скорректируйте количество товара, чтобы оформить заказ!</div>
+	<?php else: ?>
+		<div class="tRight">
+			<p><a href="<?= Shop_Service_Config::getScheme()->getCheckoutUrl() ?>"
+				class="button"><?= $this->translate('Оформить заказ') ?> <big>&rarr;</big></a></p>
+		</div>
+	<?php endif; ?>
+
+<?php else: ?>
+<p><?= $this->translate('Корзина пока пуста') ?></p>
+<?php endif; ?>

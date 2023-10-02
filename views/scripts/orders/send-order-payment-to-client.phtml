@@ -1,0 +1,27 @@
+<h2>Отправка письма на оплату заказа №<?= $this->orderNumber ?></h2>
+<p>
+	Ниже представлен текст письма на оплату текущего заказа. Вы можете
+	скорректировать или дополнить необходимую информацию. <br> <strong>Внимание!</strong>
+	После нажатия на кнопку "Отправить письмо клиенту" письмо сразу будет
+	отправлено клиенту
+</p>
+<div class="row">
+	<div class="col-md-9">
+		<table class="table table-bordered mbn" width="1000">
+			<tr>
+				<td class="col-md-2"><strong>Получатель</strong></td>
+				<td><?= $this->clientEmail ?></td>
+			</tr>
+			<tr>
+				<td class="col-md-2"><strong>Отправитель</strong></td>
+				<td><?= $this->managerEmail ?></td>
+			</tr>
+			<tr>
+				<td class="col-md-2"><strong>Тема письма</strong></td>
+				<td><?= $this->subject ?></td>
+			</tr>
+		</table>
+		
+		<?= $this->form ?>
+	</div>
+</div>

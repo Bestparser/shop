@@ -1,0 +1,51 @@
+<div class="box">
+	<div class="inner">
+	<?php if (is_array($this->groups)): ?>
+		
+		<div class="acat-path">
+		<?php include 'path.inc.phtml'; ?>
+		</div>
+		
+		<div class="acat-groups">
+		<?php
+		$index = array(); 
+		foreach ($this->groups as $group) {
+			$index[$group['PARENT']][] = $group;
+		}
+		echo __groupOutSibling($index, 0, 0, $this);
+		?>
+		</div>
+	
+	<?php endif; ?>
+	</div>
+	<div class="clear"></div>
+	<div class="top_bg"></div>
+	<div class="bot_bg"></div>
+</div>
+<?php 
+
+function __groupOutSibling(&$index, $ownerId, $deep, $view)
+{
+	$html = '';
+	if (is_array($index[$ownerId])) {
+		$html .= '<div class="' . (($deep > 0) ? ' hidden' : '') . '">';
+		foreach ($index[$ownerId] as $group) {
+			
+			$children = __groupOutSibling($index, $group['ID'], $deep + 1, $view);
+			
+			$html .= '<div class="level-' . $deep . '">';
+			$html .= !strlen($children) ? 
+				'<a href="' . $view->url(array('group' => $group['ID'], 'model' => $view->modelId), 'acat::parts') .'">'
+				: '<a class="js-action" href="#" onclick="$(this).parent().next().slideToggle(); return false;">';
+			$html .= $group['NAME'];
+			$html .= '</a>';
+			$html .= '</div>';
+			
+			$html .= $children;
+		}
+		$html .= '</div>';
+	}
+	return $html;
+}
+
+?>

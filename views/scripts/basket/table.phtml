@@ -1,0 +1,48 @@
+<table width="100%" border="1" cellspacing="0" cellpadding="2" style="font-size: x-small;">
+	<tr style="border-bottom:1px solid #888;">
+		<th><?= $this->translate('Код товара') ?></th>
+		<th><?= $this->translate('Название') ?></th>
+		<th><?= $this->translate('Артикул') ?></th>
+		<th><?= $this->translate('Срок поставки') ?></th>
+		<th><?= $this->translate('Цена') ?></th>
+		<th><?= $this->translate('Кол-во') ?></th>
+		<th><?= $this->translate('Сумма') ?></th>
+	</tr>
+	<?php foreach ($this->posList as $pos): ?>
+		<?php
+		$price = $pos->getClientPrice();
+		$quantity = $pos->getClientQuantity();
+		?>
+		<tr style="border-bottom:1px solid #ccc;">
+			<td><?= $pos->code ?></td>
+			<td><?= $pos->getClientName() ?></td>
+			<td><?= $pos->articul ?></td>
+			<td><?= ($pos->deliveryDays ? $pos->deliveryDays . ' раб.дн.' : 'на складе') ?></td>
+			<?php
+			$posDiscount = $this->calculator->itemDiscount($this->discount, $pos->name, $pos->sale);
+			$posPrice = floor(max(1, $pos->getClientPrice() * 1 * (100 - $posDiscount) / 100));
+
+		    if ($pos->mult >= 2 && $posDiscount) {
+		    	// $posPrice = floor(max(1, $pos->getClientPrice() * $pos->mult * (100 - $posDiscount) / 100)); // Кирилл: заблокировал для решения задачи gitlab 435
+		    	$posPrice = floor(max(1, $pos->getClientPrice() * (100 - $posDiscount) / 100)); // Кирилл: переделал для решения задачи gitlab 435
+		    } else if ($pos->mult >= 2 && !$posDiscount) {
+		    	//$posPrice = $posPrice * $pos->mult; // Кирилл: заблокировал для решения задачи gitlab 435
+		    }
+
+			?>
+			<td align="right">
+				<?= $posPrice ?> р.
+				<?php if ($posDiscount): ?>
+					<br><small title="цена без скидки"><?= Lv7_Service_Text::asPrice($price, 2) ?> р. - <?= $posDiscount ?>%</small>
+				<?php endif; ?>
+			</td>
+			<td align="center"><?= $quantity ?></td>
+			<td align="right"><?= Lv7_Service_Text::asPrice($posPrice * $quantity, 2) ?> р.</td>
+		</tr>
+	<?php endforeach; ?>
+	<tr style="font-weight:bold;">
+		<td colspan="5"><?= $this->translate('Итого стоимость товаров') ?></td>
+		<td align="center"><?= $this->quantity ?></td>
+		<td align="right"><?= Lv7_Service_Text::asPrice($this->cost, 2) ?> р.</td>
+	</tr>
+</table>

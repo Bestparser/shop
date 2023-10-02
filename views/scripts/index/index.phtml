@@ -1,0 +1,24 @@
+<div class="box">
+	<div class="inner">
+	<?php if (is_array($this->types)): ?>
+
+		<div class="acat-path">
+		<?php include 'path.inc.phtml'; ?>
+		</div>
+	
+		<ul class="acat-types">
+		<?php foreach($this->types as $type): ?>
+			<li><a href="<?= $this->url(array('type' => $type['id']), 'acat::marks') ?>" title="<?= $type['name'] . ' ' . $this->postfix ?>">
+			<img src="<?= $this->dataUrl ?>/picture/<?= sprintf("%02d", $type['sort']) ?>.gif" width="32" height="32"
+				alt="<?= $type['name'] ?>" title="<?= $type['name'] . ' ' . $this->postfix ?>" align="absmiddle"></a>&nbsp;
+			<a href="<?= $this->url(array('type' => $type['id']), 'acat::marks') ?>"
+				title="<?=$type['name'] . ' ' . $this->postfix ?>"><?= $type['name'] ?></a></li>
+		<?php endforeach; ?>
+		</ul>
+	
+	<?php endif; ?>
+	</div>
+	<div class="clear"></div>
+	<div class="top_bg"></div>
+	<div class="bot_bg"></div>
+</div>

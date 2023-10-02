@@ -1,0 +1,1075 @@
+<?php
+//$this->dataTables();
+
+echo $this->formHidden('orderId', $this->order->id);
+echo $this->formHidden('catalogId', $this->catalog->id);
+?>
+<script type="text/javascript" src="<?= $this->dataUrl ?>/js/modules/shop/order.js?12"></script>
+<script type="text/javascript" src="<?= $this->dataUrl ?>/js/jquery.redirect.js"></script>
+
+<p><a href="<?= $this->url(array(), 'shop::adminOrders') ?>" class="button-back">к списку заказов</a></p>
+
+
+<form action="<?= $this->url(array('orderId' => $this->order->id), 'shop::adminOrderSave') ?>" class="form-std" method="POST" id="order-form">
+
+	<div class="panel panel-default">
+		<div class="panel-heading">
+			<div class="row">
+				<div class="col-md-2">
+					<h3 class="panel-title"><?= $this->translate('Заказ') ?> №<?= $this->order->number ?></h3>
+				</div>
+				<div class="col-md-2">
+					<span class="fa fa-calendar"></span> <?= $this->showDate($this->order->created, 'KKK') ?>
+				</div>
+				<div class="col-md-3">
+					<span class="fa fa-user"></span> <?= ($this->client ? $this->crmClientName($this->client) : '---') ?>
+					<?php if ($this->order->params->company_inn): ?>[ ИНН: <?= $this->order->params->company_inn; ?> ] <?php endif; ?>
+				</div>
+				<div class="col-md-5">
+					<?= $this->orderType->name ?>
+					<?= $this->extObj ? ' (<a href="' . $this->extObj->getBackendUrl() . '">' . $this->extObj->getName() . '</a>)' : '' ?>
+				</div>
+
+			</div>
+
+		</div>
+		<div class="panel-body">
+			<div class="row">
+				<div class="col-md-2">
+					Статус заказа:<br><?= $this->formSelect('statusId', $this->order->status, array('class' => 'smooth fluid-width'), $this->orderStatusOptions) ?>
+				</div>
+				<div class="col-md-2">
+					Менеджер:<br><?= $this->formSelect('managerId', $this->order->manager, array('class' => 'smooth fluid-width'), $this->managerOptions) ?>
+				</div>
+                <div class="col-md-2">
+                    Территория:<br><?= $this->formSelect('territoryId', $this->order->territory_id, array('class' => 'smooth fluid-width'), $this->territoryOptions) ?>
+                </div>
+                <div class="col-md-2">
+                    Ответственный:<br><?= $this->formSelect('responsibleId', $this->order->responsible_id, array('class' => 'smooth fluid-width'), $this->responsibleOptions) ?>
+                </div>
+				<div class="col-md-4">
+					<?= $this->formTextarea('managerComments', $this->order->params->managerComments, array('rows' => 2, 'cols' => 60, 'class' => 'smooth fluid-width', 'placeholder' => 'Введите здесь заметки к заказу при необходимости')) ?>
+				</div>
+                <?php /*
+                <div class="col-md-1">
+                    Экспорт в LF:<br><?= $this->formSelect('toExport', $this->order->to_export, array('class' => 'smooth fluid-width'), [0 => 'Нет', 1 => 'Да']) ?>
+                </div>
+                */ ?>
+			</div>
+		</div>
+	</div>
+
+	<div class="panel panel-default">
+			<table class="table">
+				<tr>
+					<th><?= $this->translate('Код') ?></th>
+					<th><?= $this->translate('Название') ?></th>
+					<th><?= $this->translate('Артикул') ?></th>
+					<th><?= $this->translate('Поставщик') ?></th>
+					<th><?= $this->translate('Цена поставщика') ?></th>
+					<th><?= $this->translate('Наличие') ?></th>
+					<th><?= $this->translate('Сроки') ?></th>
+					<th><?= $this->translate('Кратность') ?></th>
+					<th><?= $this->translate('Цена для клиента') ?></th>
+					<th><?= $this->translate('Кол-во') ?></th>
+					<th><?= $this->translate('Сумма') ?></th>
+					<th><?= $this->translate('Статус') ?></th>
+					<th>&nbsp;</th>
+					<th><?= $this->translate('Удалить') ?></th>
+				</tr>
+				<?php
+				$total = 0;
+				$posStatus = new Shop_Model_Mapper_OrderPosStatus();
+				?>
+				<?php foreach ((array) $this->posList as $pos): ?>
+					<?php
+
+                    /*
+					if (!empty($pos->code)) {
+						$findProduct = $this->productsMapper->find($pos->code);
+						$posId = array();
+						$posArtikul = array();
+						if ($findProduct) {
+								$posId[$pos->code] = $findProduct->id;
+								$posArtikul[$pos->code] = $findProduct->artikul1;
+						}
+					}
+
+					$posIdF = array();
+					$posArtikulF = array();
+					if (!empty($this->findProducts)) {
+						foreach ($this->findProducts as $pos_sup) {
+							if ($pos_sup->artikul1_norm){
+								$posIdF[$pos_sup->maker .' '. $pos_sup->artikul1_norm] = $pos_sup->id;
+								$posArtikulF[$pos_sup->maker .' '. $pos_sup->artikul1_norm] = $pos_sup->artikul1;
+							}
+						}
+					}
+
+					if(!isset($posIdF[$pos->articul]) && $pos->man_brand && $pos->man_number) {
+						$findProduct = $this->productsMapper->findByArticul($pos->man_brand, $pos->man_number);
+						if ($findProduct) {
+							$posIdF[$findProduct->maker .' '. $findProduct->artikul1_norm] = $findProduct->id;
+							$posArtikulF[$findProduct->maker .' '. $findProduct->artikul1_norm] = $findProduct->artikul1;
+						}
+					}
+                    */
+					?>
+
+					<?php
+					$rowClass = '';
+					if (in_array($this->order->type, array(Shop_Model_Mapper_OrderTypes::DISTRIB, Shop_Model_Mapper_OrderTypes::VIN))) {
+						switch ($pos->status) {
+							case Shop_Model_Mapper_OrderPosStatus::UNORDERED:
+								$rowClass = "text-danger";
+								break;
+							case Shop_Model_Mapper_OrderPosStatus::ORDERED:
+								//$rowClass = "text-primary";
+								$rowClass = "text-system";
+								break;
+							case Shop_Model_Mapper_OrderPosStatus::ON_WAREHOUSE:
+								$rowClass = "text-alert";
+								break;
+							case Shop_Model_Mapper_OrderPosStatus::SENT:
+								$rowClass = "text-success";
+								break;
+							case Shop_Model_Mapper_OrderPosStatus::NOT_AVAILABLE:
+							case Shop_Model_Mapper_OrderPosStatus::CANCEL:
+								$rowClass = "text-muted";
+								break;
+						}
+					}
+					?>
+
+					<tr class="<?= $rowClass ?>">
+						<td class="<?= $pos->isItemFromSuppliers() ? 'text-muted' : '' ?>">
+                            <?= $pos->getWarehouseCode() ?>
+                        </td>
+						<td>
+                            <?php if ($pos->hasArticle()): ?>
+                                <div class="text-muted-lighter fs11" title="Связанная позиция в справочнике автозапчастей">
+                                    <?= $pos->getArticle()->id ?>
+                                    <strong><?= $pos->getArticleBrandName() ?> <?= $pos->getArticleNumber() ?></strong>
+                                </div>
+                            <?php endif; ?>
+                            <div class="fs15"><?= $pos->getClientName() ?></div>
+							<?php if ($pos->unit && $pos->unit->supplier): ?>
+								<div class="text-muted"><small>кратность товара у поставщика: <?= $pos->unit->min_order ? $pos->unit->min_order : '---' ?></small></div>
+								<?php if ($pos->multInfo && ($pos->multInfo['mult'] != $pos->mult)): ?>
+									<div class="text-system"><i class="fa fa-warning"></i> <strong>Внимание!</strong> Товар распознан как <strong><?= $pos->multInfo['name'] ?></strong>, кратность товара должна быть <strong><?= $pos->multInfo['mult'] ?></strong>!</div>
+								<?php endif; ?>
+							<?php endif; ?>
+							<?php if (!$pos->code && !$pos->unit && $pos->supplier): ?>
+								<div class="text-danger"><i class="fa fa-warning"></i> Внимание! Позиция от поставщика, но товар в базе не найден! Попробуйте обновить страницу, или обратитесь к администратору!</div>
+							<?php endif; ?>
+
+						</td>
+						<td class="text-nowrap">
+                            <div><?= $pos->articul ?></div>
+                            <?php if ($pos->isItemFromSuppliers()): ?>
+                                <div class="text-muted fs12"><strong>LF:</strong> <?= $pos->getProductArticul() ?></div>
+                            <?php endif; ?>
+						</td>
+						<td><?= isset($this->suppliers[$pos->supplier]) ? '<a href="' . $this->url(array('supplierId' => $pos->supplier), 'shop::adminOrderPosBySupplier') . '">' . $this->suppliers[$pos->supplier]->name . '</a>' : '---' ?></td>
+						<td class="text-right text-nowrap">
+							<?php
+							$purchasePrice = $pos->price_purchase;// ? $pos->price_purchase : $pos->unit->price;
+
+							if (isset($this->othersUnits[$pos->analog])): ?>
+								<?php
+								reset($this->othersUnits[$pos->analog]);
+								$cheapestUnit = current($this->othersUnits[$pos->analog]);
+								$hasLowerPrice = ($cheapestUnit->price < $pos->price_purchase);
+								?>
+								<div class="dropdown">
+									<a id="pos<?= $pos->id ?>" data-toggle="dropdown" href="#" title="есть предложения от других поставщиков"
+										aria-haspopup="true" aria-expanded="false">
+										<?php if ($hasLowerPrice): ?>
+											<i class="fa fa-warning text-danger pr5"></i>
+										<?php else: ?>
+											<i class="fa fa-check text-success pr5"></i>
+										<?php endif; ?>
+										<?= $purchasePrice ? Lv7_Service_Text::asPrice($purchasePrice, 0) . ' р.' : '---' ?>
+										<span class="caret"></span>
+									</a>
+									<div class="dropdown-menu" aria-labelledby="pos<?= $pos->id ?>">
+										<div class="p10">
+
+											<table class="table table-striped w400 text-dark-dark">
+												<thead>
+													<tr class="text-muted text-small">
+														<th class="text-center text-nowrap">Поставщик</th>
+														<th class="text-center">Цена</th>
+														<th class="text-center">Наличие</th>
+														<th class="text-center">Срок поставки</th>
+													</tr>
+												</thead>
+												<tbody>
+												<?php foreach ($this->othersUnits[$pos->analog] as $supplierId => $otherUnit): ?>
+													<tr class="<?= ($pos->supplier == $supplierId) ? 'info' : '' ?>">
+														<td><?= $this->suppliers[$supplierId] ? '<a href="/shop/orders/set-order-pos-supplier?order=' . $this->order->id . '&supplier=' . $supplierId . '&pos=' . $pos->id . '" title="Сменить поставщика">' . $this->suppliers[$supplierId]->name . '</a>' : '---' ?></td>
+														<td class="text-right <?= ($otherUnit->price < $pos->price_purchase) ? 'text-success' : '' ?>"><?= Lv7_Service_Text::asPrice($otherUnit->price, 0) ?> р.</td>
+														<td class="text-center"><?= $otherUnit->stock ?></td>
+														<td class="text-center"><?= $otherUnit->frontDelivery ?></td>
+													</tr>
+												<?php endforeach; ?>
+												</tbody>
+											</table>
+										</div>
+									</div>
+								</div>
+							<?php else: ?>
+								<?= $purchasePrice ? Lv7_Service_Text::asPrice($purchasePrice, 0) . ' р.' : '---' ?>
+							<?php endif; ?>
+						</td>
+						<td class="text-right text-nowrap fs11">
+						<?php
+						if ($pos->stock) {
+							echo '<strong class="fs14">' . $pos->stock . '</strong> шт.';
+						} elseif (is_array($a = $this->catalogUnitsAvailability[(int)$pos->code])) {
+							foreach ($a as $availability) {
+								$shop = $this->shops[$availability->shop];
+								echo '<span>' . $shop->abbr . ':</span> <strong class="fs14">' . $availability->quantity . '</strong> шт.<br>';
+							}
+						} else {
+							echo '---';
+						}
+
+						$posDiscount = $this->calculator->itemDiscount($this->order->params->discount, $pos->name, $pos->sale);
+						$posPrice = floor(max(1, $pos->getClientPrice() * 1 * (100 - $posDiscount) / 100));
+
+						$posQuantity = $pos->getClientQuantity();
+						$findSupplier = $this->mapperSuppliers->find($pos->supplier);
+						if ($findSupplier) {
+							$pricePosClient = $pos->getClientPrice();
+							$supplierSale1 = $findSupplier->sale_1; // < 100 руб
+							$supplierSale1Price = $pricePosClient < 100;
+							$supplierSale2 = $findSupplier->sale_2; // 100 - 1000
+							$supplierSale2Price = $pricePosClient >= 100 && $pricePosClient < 1000;
+							$supplierSale3 = $findSupplier->sale_3; // 1000 - 5000
+							$supplierSale3Price = $pricePosClient >= 1000 && $pricePosClient < 5000;
+							$supplierSale4 = $findSupplier->sale_4; // 5000 - 10000
+							$supplierSale4Price = $pricePosClient >= 5000 && $pricePosClient < 10000;
+							$supplierSale5 = $findSupplier->sale_5; // 10000 - 30000
+							$supplierSale5Price = $pricePosClient >= 10000 && $pricePosClient < 30000;
+							$supplierSale6 = $findSupplier->sale_6; // < 30000
+							$supplierSale6Price = $pricePosClient >= 30000;
+						}
+
+						?>
+						</td>
+						<td class="text-right">
+							<?= $pos->frontDelivery ? $pos->frontDelivery . ' <span class="fs11">дн</span>' : '---' ?>
+						</td>
+						<td class="text-center">
+							<?php if ($pos->supplier): ?>
+								<div class="dropdown">
+									<a id="mult<?= $pos->id ?>" data-toggle="dropdown" href="#" title="кратность товара"
+										aria-haspopup="true" aria-expanded="false" class="btn btn-default btn-sm">
+										x<?= $pos->mult ?> <span class="caret"></span>
+									</a>
+									<ul class="dropdown-menu" aria-labelledby="mult<?= $pos->id ?>">
+										<li <?= ($pos->mult == 1) ? 'class="active"' : '' ?>><a href="/shop/orders/set-pos-multiplicity?posId=<?= $pos->id ?>&mult=1">одиночный товар (х1)</a></li>
+										<li <?= ($pos->mult == 2) ? 'class="active"' : '' ?>><a href="/shop/orders/set-pos-multiplicity?posId=<?= $pos->id ?>&mult=2">комплект 2 шт (х2)</a></li>
+										<li <?= ($pos->mult == 4) ? 'class="active"' : '' ?>><a href="/shop/orders/set-pos-multiplicity?posId=<?= $pos->id ?>&mult=4">комплект 4 шт (х4)</a></li>
+										<li <?= ($pos->mult == 8) ? 'class="active"' : '' ?>><a href="/shop/orders/set-pos-multiplicity?posId=<?= $pos->id ?>&mult=8">комплект 8 шт (х8)</a></li>
+									</ul>
+								</div>
+							<?php endif; ?>
+						</td>
+						<?php if ( ($supplierSale1 && $supplierSale1Price) || ($supplierSale2 && $supplierSale2Price) || ($supplierSale3 && $supplierSale3Price) || ($supplierSale4 && $supplierSale4Price) || ($supplierSale5 && $supplierSale5Price) || ($supplierSale6 && $supplierSale6Price) ): ?>
+						<td align="right" style="background: #d1ffd2;" nowrap="nowrap">
+
+								<div class="text-success" style="font-weight:bold;cursor:help;" title="В настройках поставщика установлены спец.цены"><i class="fa fa-info-circle"></i> Спеццена</div>
+						<?php else: ?>
+						<td align="right" nowrap="nowrap">
+							<?php endif; ?>
+
+							<?php if ($posDiscount): ?>
+								<?= $this->formText('pos_price_' . $pos->id, $pos->getClientPrice(), array('class'=>'smooth', 'size' => '5', 'style'=> 'text-align:right;')) ?> р. - <?= $posDiscount ?>% = <?= $posPrice ?> р.
+							<?php else: ?>
+								<?= $this->formText('pos_price_' . $pos->id, $posPrice, array('class'=>'smooth', 'size' => '5', 'style'=> 'text-align:right;')) ?> р.
+							<?php endif; ?>
+						</td>
+						<td align="center"><?= $this->formText('pos_quantity_' . $pos->id, $posQuantity, array('class'=>'smooth', 'size' => '5', 'style'=> 'text-align:center;')) ?></td>
+						<td class="text-right text-nowrap fs16">
+							<?= $posPrice * $posQuantity ?> р.
+						</td>
+						<td nowrap="nowrap"><?= $this->formSelect('status_' . $pos->id, $pos->status, array('class' => 'smooth'), $this->posStatusOptions) ?></td>
+
+						<td width="1%" align="center">
+							<?php if ($pos->analog): ?>
+								<a href="#" class="distrib-popup-select button-list btn btn-sm btn-default" data-brand="<?= $this->escape($pos->man_brand) ?>"
+									data-number="<?= $this->escape($pos->man_number) ?>" title="найти аналог"><i class="fa fa-exchange"></i></a>
+							<?php endif; ?>
+							<?php /*
+							<a href="<?= $this->url(array(
+								'orderId' => $this->order->id,
+								'posId' => $pos->id,
+							), 'shop::adminOrderPosDelete') ?>" query="Удалить позицию?" class="button-delete">удалить</a>
+							*/?>
+						</td>
+						<td width="1%" align="center">
+							<?= $this->formCheckbox('pos_delete_' . $pos->id, 1) ?>
+						</td>
+					</tr>
+					<?php $total += $posQuantity; ?>
+				<?php endforeach; ?>
+				<tr style="font-weight:bold;">
+					<td colspan="9"><?= $this->translate('Товары') ?></td>
+					<td align="center"><?= $total ?></td>
+					<td align="right"><?= Lv7_Service_Text::asPrice($this->order->params->goodsCost, 0) ?> р.</td>
+					<td colspan="4">&nbsp;</td>
+				</tr>
+				<tr>
+					<td colspan="10"><?= $this->translate('Доставка') ?></td>
+					<?php /*
+					<td colspan="2">
+						<?php
+						$options = array();
+						foreach ($this->deliveries as $delivery) {
+							$options[$delivery->getId()] = $delivery->getName();
+						}
+						echo $this->formSelect('delivery', $order->params->delivery, array('class'=>'smooth'), $options);
+						?>
+					</td>
+					*/?>
+					<?php //Кирилл: если доставка - Яндекс Такси, то чекбукс в админке на "ручное изменение цены доставки" ставим active автоматом по умолчанию ?>
+					<td align="right" nowrap="nowrap">
+						<?= $this->formText('delivery_cost', round($this->order->params->deliveryCost, 0), array('class'=>'smooth', 'size' => '5', 'style'=> 'text-align:right;')) ?> р.
+					</td>
+					<td colspan="4">
+						<label>
+							<?php if ($this->order->params->delivery == 'YandexDelivery'){ ?>
+								<?= $this->formCheckbox('delivery_set_manual', 1, array('checked' => true)) ?>
+								- <?= $this->translate('установить значение вручную') ?>
+							<?php } else { ?>
+								<?= $this->formCheckbox('delivery_set_manual', 1, array('checked' => ((bool)$this->order->params->deliveryCostManualSet))) ?>
+								- <?= $this->translate('установить значение вручную') ?>
+							<?php } ?>						
+						</label>
+					</td>
+				</tr>
+				<tr style="font-weight:bold; font-size:1.2em;">
+					<td colspan="10"><?= $this->translate('Итого') ?></td>
+					<td align="right" nowrap="nowrap"><?= Lv7_Service_Text::asPrice($this->order->params->totalCost, 0) ?> р.</td>
+					<td colspan="4">
+					</td>
+				</tr>
+				<?php if ($this->order->type == Shop_Model_Mapper_OrderTypes::INNER): ?>
+					<tr>
+						<td colspan="10"><?= $this->translate('Предоплата') ?></td>
+						<td align="right" nowrap="nowrap">
+							<?= $this->formText('prepaid', round($this->order->params->prepaid, 0), array('class'=>'smooth', 'size' => '5', 'style'=> 'text-align:right;')) ?> р.
+						</td>
+						<td colspan="4">
+							<label>
+								<?= $this->formCheckbox('prepaid_set_manual', 1, array('checked' => ((bool)$this->order->params->prepaidManualSet))) ?>
+								- <?= $this->translate('установить значение вручную') ?>
+							</label>
+						</td>
+					</tr>
+				<?php endif; ?>
+			</table>
+	</div>
+
+	<div class="row-fluid">
+		<div class="span7">
+
+			<div class="form-std panel panel-default">
+				<div class="panel-heading">
+					<div class="row">
+						<div class="col-sm-6">
+							<h4 class="panel-title"><?= $this->translate('Контактная информация') ?></h4>
+						</div>
+						<div class="col-sm-6 text-right">
+						</div>
+					</div>
+				</div>
+				<div class="panel-body">
+				<fieldset class="fieldset-two-column">
+					<?php
+					$this->form->setWidth(100, '%');
+					//$this->form->setAttrib('id', 'order-params');
+					$this->form->stylizeForm();
+
+					echo $this->form->doc_type;
+					echo $this->form->faceType;
+					echo $this->form->paymentMethod;
+					echo $this->form->delivery;
+					echo $this->form->distance;
+					echo $this->form->contact_face;
+					echo $this->form->passport;
+					echo $this->form->address_register;
+					echo $this->form->phone;
+					echo $this->form->email;
+					echo $this->form->address;
+					echo $this->form->discount_card;
+					echo $this->form->vin_number;
+					echo $this->form->comments;
+					echo $this->form->shop;
+					echo $this->form->barcode;
+					?>
+				</fieldset>
+				</div>
+			</div>
+		</div>
+		<div class="span5">
+			<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+
+				<div class="panel panel-info">
+					<div class="panel-heading" role="tab" id="suppliersOrdersHead">
+						<h4 class="panel-title">
+							<a role="button" data-toggle="collapse" data-parent="#accordion"
+								href="#suppliersOrdersBody" aria-expanded="false"
+								aria-controls="suppliersOrdersBody"><span class="fa fa-angle-right"></span> Заказы поставщикам</a>
+						</h4>
+					</div>
+					<div id="suppliersOrdersBody" class="panel-collapse collapse"
+						role="tabpanel" aria-labelledby="suppliersOrdersHead">
+						<div class="panel-body">
+
+							<?php if (count($this->posToSendOrder)): ?>
+								<h4>Заказы поставщикам</h4>
+
+								<table class="table table-striped supplier-orders-controls">
+									<tr>
+										<th width="1%">&nbsp;</th>
+										<th><?= $this->translate('Поставщик') ?></th>
+										<th><?= $this->translate('Товары для заказа') ?></th>
+									</tr>
+									<?php foreach ($this->posToSendOrder as $supplierId => $posBySupplier): ?>
+										<?php
+										$supplier = $this->suppliers[$supplierId];
+										if ($supplier) {
+											$hasEmail = $supplier->getOrderEmail($this->currentManagerProfile ? $this->currentManagerProfile->shop : false);
+										}
+										?>
+										<tr>
+											<td>
+												<?php if ($hasEmail): ?>
+													<input type="checkbox" id="supplier-<?= $supplierId ?>" name="suppliers[]" value="<?= $supplierId ?>" checked class="suppliers">
+												<?php endif;?>
+											</td>
+											<td><label for="supplier-<?= $supplierId ?>">
+												<?= $supplier->name ?>
+												<div class="text-muted"><small><?= $hasEmail ? $hasEmail : 'e-mail не указан!' ?>
+												</small></div>
+											</td>
+											<td class="text-danger">
+												<?php
+												$posInfo = array();
+												foreach ($posBySupplier as $pos) {
+													$posInfo[] = $pos->articul;
+												}
+												echo implode(', ', $posInfo);
+												?>
+											</td>
+										</tr>
+									<?php endforeach; ?>
+								</table>
+								<?php if ($this->order->manager || $this->order->type == Shop_Model_Mapper_OrderTypes::ORDERHALL): ?>
+									<a href="#" class="button send-supplier-orders"><span class="fa fa-envelope"></span> Отправить заказы поставщикам</a>
+								<?php else: ?>
+									<div class="alert alert-warning">Чтобы отправить заказы поставщикам, выберите ответственного менеджера в настройках заказа!</div>
+								<?php endif; ?>
+
+								<br><br>
+							<?php endif; ?>
+
+							<h4>Отправленные поставщикам заказы</h4>
+							<?= $this->action('bysource', 'supplierorders', 'distrib', array('typeId' => Distrib_Model_Mapper_SupplierOrderSourceTypes::CLIENT_ORDER, 'id' =>  $this->order->id)) ?>
+
+						</div>
+					</div>
+				</div>
+				<?php if ($this->order->params->paymentMethod == 'Bnpl'): ?>
+					<div class="panel panel-success">
+						<div class="panel-heading" role="tab" id="bnplPaymentHead">
+							<h4 class="panel-title">
+								<a role="button" data-toggle="collapse" data-parent="#accordion"
+									href="#bnplPaymentBody" aria-expanded="false"
+									aria-controls="bnplPaymentBody"><span class="fa fa-angle-right"></span> Информация по оплате "Долями"</a>
+							</h4>
+						</div>
+						<div id="bnplPaymentBody" class="panel-collapse collapse"
+							role="tabpanel" aria-labelledby="bnplPaymentHead">
+							<div class="panel-body">
+								<?php if ($this->paymentInfo):?>
+									<table class="table table-striped">
+										<tbody>
+											<tr>
+												<td>Статус заявки</td>
+
+												<?php
+												$status = $this->paymentInfo['status'];
+												switch ($status) {
+													case 'waiting_for_commit':
+												        $status = 'Ожидание подтверждения';
+												        break;
+												    case 'approved':
+												        $status = 'Ожидается оплата';
+												        break;
+												    case 'committed':
+												        $status = 'Подтвержден';
+												        break;
+												    case 'completed':
+												        $status = 'Первый платеж списан';
+												        break;
+												    case 'canceled':
+												        $status = 'Заявка отменена';
+												        break;
+												    case 'rejected':
+												        $status = 'Заявка отклонена';
+												        break;
+												}
+												?>
+												<td colspan="2">
+													<?= $status ?> <?php if (!empty($this->paymentInfo['refund_info'])): ?>(Был возврат)<?php endif; ?>
+												</td>
+											</tr>
+											<tr>
+												<td>Сумма оплаты <?php if (!empty($this->paymentInfo['refund_info'])): ?>(Сумма возврата)<?php endif; ?></td>
+												<td colspan="2">
+													<?= $this->paymentInfo['amount']; ?> р. <?php if (!empty($this->paymentInfo['refund_info'])): ?>(<?= $this->paymentInfo['refund_info']['total_refunded_amount']; ?> р.)<?php endif; ?>
+												</td>
+											</tr>
+											<tr>
+												<td>Оставшаяся сумма</td>
+												<td colspan="2">
+													<?= $this->paymentInfo['residual_amount']; ?> р.
+												</td>
+											</tr>
+											<?php if($this->paymentInfo['payment_schedule']): ?>
+												<tr>
+													<td><b>График платежей (дата)</b></td>
+													<td><b>Сумма</b></td>
+													<td><b>Статус</b></td>
+												</tr>
+												<?php foreach ($this->paymentInfo['payment_schedule'] as $payment): ?>
+												<tr>
+													<td><?= $payment['payment_date']; ?></td>
+													<td>
+														<?= $payment['amount']; ?> р.
+													</td>
+													<?php if ($payment['status'] == 'scheduled'): ?>
+														<?php $status = 'Запланирован'; ?>
+													<?php elseif ($payment['status'] == 'hold'): ?>
+														<?php $status = 'Захолдирован'; ?>
+													<?php endif; ?>
+													<td><?= $status ? $status : $payment['status']; ?></td>
+												</tr>
+
+												<?php endforeach; ?>
+											<?php endif; ?>
+										</tbody>
+									</table>
+									<?php if($this->paymentInfo['status'] == 'waiting_for_commit'): ?>
+										<div>
+											<a href="/shop/orders/paymentdeposit?orderId=<?= $this->order->id ?>" class="button" onclick="return confirm('Вы уверены?')">Подтвердить заявку</a> &nbsp;
+											<a href="/shop/orders/paymentreverse?orderId=<?= $this->order->id ?>" class="button" onclick="return confirm('Вы уверены?')">Отменить заявку</a>
+										</div>
+									<?php endif; ?>
+									<?php if($this->paymentInfo['status'] == 'approved' || $this->paymentInfo['status'] == 'committed'): ?>
+										<?php if(empty($this->paymentInfo['refund_info'])): ?>
+										<a href="/shop/orders/paymentrefund?orderId=<?= $this->order->id ?>" class="button" onclick="return confirm('Вы уверены?')">Полный возврат</a> &nbsp;
+										<?php endif; ?>
+										<?php if($this->paymentInfo['amount'] != $this->paymentInfo['refund_info']['total_refunded_amount']): ?>
+										<a href="/shop/orders/paymentrefundpartial?orderId=<?= $this->order->id ?>" class="button">Частичный возврат</a> &nbsp;
+										<?php endif; ?>
+										<?php if(!empty($this->paymentInfo['refund_info'])): ?>
+											<a href="/shop/orders/paymentrefundpartial?orderId=<?= $this->order->id ?>" class="button">Что вернули?</a> &nbsp;
+										<?php endif; ?>
+										<?php if(!empty($this->paymentInfo['link'])): ?>
+											<a href="<?= $this->paymentInfo['link'] ?>" class="button">Ссылка на оплату</a> &nbsp;
+										<?php endif; ?>
+									<?php endif; ?>
+								<?php endif;?>
+							</div>
+						</div>
+					</div>
+				<?php endif; ?>
+				<?php if ($this->order->params->paymentMethod == 'Sberbank'): ?>
+
+					<div class="panel panel-success">
+						<div class="panel-heading" role="tab" id="bankPaymentHead">
+							<h4 class="panel-title">
+								<a role="button" data-toggle="collapse" data-parent="#accordion"
+									href="#bankPaymentBody" aria-expanded="false"
+									aria-controls="bankPaymentBody"><span class="fa fa-angle-right"></span> Оплата заказа по карте</a>
+							</h4>
+						</div>
+						<div id="bankPaymentBody" class="panel-collapse collapse"
+							role="tabpanel" aria-labelledby="bankPaymentHead">
+							<div class="panel-body">
+
+								<?php if ($this->paymentInstruction): ?>
+									<?php
+									$now = new Zend_Date();
+									$cardExpired = false;
+									?>
+									<table class="table table-striped">
+										<tbody>
+											<tr>
+												<td>Статус оплаты</td>
+												<td><?php
+													echo $this->paymentInstruction->getStatusName();
+													if ($this->paymentInstruction->status == Finance_Model_PaymentInstructionStatus::ERROR) {
+														echo '<br><small class="text-muted">' . $this->paymentInstruction->errors . '</span>';
+													}
+												?></td>
+											</tr>
+											<tr>
+												<td colspan="2"><strong>Данные в системе Сбербанка:</strong></td>
+											</tr>
+											<?php if ($this->paymentInfo): ?>
+												<?php
+												$expiration = $this->paymentInfo->expiration;
+												if ($expiration) {
+													$expYear = substr($expiration, 0, 4);
+													$expMonth = substr($expiration, 4, 2);
+													$expDate = new Zend_Date();
+													$expDate->setDay(1);
+													$expDate->setMonth($expMonth);
+													$expDate->setYear($expYear+3);
+													// ставим на начало следующего месяца
+													$expDate->addMonth(1);
+													$expDate->setHour(0);
+													$expDate->setMinute(0);
+													$expDate->setSecond(0);
+													// проверяем не истек ли срок действия карты
+													$cardExpired = $now->isLater($expDate);
+												}
+												?>
+												<tr>
+													<td>Название заказа</td>
+													<td><?= $this->paymentInfo->OrderNumber ?></td>
+												</tr>
+												<tr>
+													<td>Сумма заказа</td>
+													<td>
+														<?= Lv7_Service_Text::asPrice($this->paymentInfo->Amount / 100, 0) ?> р.
+														<?php if (($this->paymentInstruction->status == Finance_Model_PaymentInstructionStatus::AUTHORIZED)
+																	&& ($this->paymentInstruction->amount > ($this->paymentInfo->Amount / 100))): ?>
+															<div class="alert alert-warning">Внимание! Предавторизованная сумма меньше, чем стоимость заказа!</div>
+														<?php endif; ?>
+													</td>
+												</tr>
+												<tr>
+													<td>Оплата</td>
+													<td>
+														<?= Lv7_Service_Text::asPrice($this->paymentInfo->depositAmount / 100, 0) ?> р.
+													</td>
+												</tr>
+												<tr>
+													<td>Статус</td>
+													<td><?= $this->paymentInfo->OrderStatusName ?></td>
+												</tr>
+												<tr>
+													<td>Карта</td>
+													<td><?= $this->paymentInfo->Pan ?></td>
+												</tr>
+												<?php if ($expiration): ?>
+													<tr>
+														<td>Срок действия</td>
+														<td class="<?= $cardExpired ? 'text-danger' : '' ?>"><?= $expYear . '-' . $expMonth ?></td>
+													</tr>
+												<?php endif; ?>
+												<tr>
+													<td>Владелец</td>
+													<td><?= $this->paymentInfo->cardholderName ?></td>
+												</tr>
+											<?php else: ?>
+												<tr>
+													<td colspan="2">Данных по платежу не найдено</td>
+												</tr>
+											<?php endif; ?>
+										</tbody>
+									</table>
+									<div>
+										<?php
+										$user = Zend_Registry::get('user');
+										$accessibleRoles = array('developer', 'administrator');
+										$canRefund = ($user && in_array($user->getRole(), $accessibleRoles));
+										$piDate = Lv7_Service_Datetime::AtomToZendDate($this->paymentInstruction->created);
+										$piDate->addDay(30);
+										$paymentExpired = $piDate->isEarlier($now);
+										?>
+										<?php if ($this->paymentInstruction->status == Finance_Model_PaymentInstructionStatus::AUTHORIZED): ?>
+											<?php if ($cardExpired): ?>
+												<div class="text-danger">Внимание! У карты клиента закончился срок действия. Необходима проверка!</div>
+											<?php elseif ($paymentExpired): ?>
+												<div class="text-danger">Внимание! Прошло более 30 суток с момента холдирования средств. Деньги ушли обратно клиенту, необходима проверка!</div>
+											<?php else: ?>
+												<?php if ($this->paymentInstruction->amount <= ($this->paymentInfo->Amount / 100)): ?>
+													<a href="/shop/orders/paymentdeposit?orderId=<?= $this->order->id ?>" class="button" onclick="return confirm('Вы уверены?')">Принять оплату</a>
+												<?php endif; ?>
+												<a href="/shop/orders/paymentreverse?orderId=<?= $this->order->id ?>" class="button" onclick="return confirm('Вы уверены?')">Отмена оплаты</a>
+											<?php endif; ?>
+										<?php elseif (($this->paymentInstruction->status == Finance_Model_PaymentInstructionStatus::PAID) && $canRefund): ?>
+											<a href="/shop/orders/paymentrefund?orderId=<?= $this->order->id ?>" class="button" onclick="return confirm('Вы уверены?')">Возврат оплаты</a>
+										<?php endif; ?>
+									</div>
+								<?php else: ?>
+									<p>Транзакции по данному заказу не зарегистрировано</p>
+								<?php endif; ?>
+
+
+								<div class="mt30">
+									<h3>Письмо на оплату</h3>
+									<div class="row">
+										<div class="col-sm-6">
+											<a
+												href="<?= $this->url(array('orderId' => $this->order->id), 'shop::adminOrderPaymentSendToClient') ?>"
+												class="btn btn-success btn-block <?= strlen($this->order->params->email) ? '' : 'disabled'?>"
+												title="Перейти к просмотру сообщения"><i
+												class="fa fa-envelope-o"></i> Отправить клиенту</a>
+										</div>
+										<div class="col-sm-6">
+											<?php if ($this->order->order_mail_sent): ?>
+												Письмо отправлено клиенту
+												<br><?= $this->showDate($this->order->order_mail_sent, 'KKK') ?>
+												<br><a href="<?= $this->url(array('orderId' => $this->order->id), 'shop::adminOrderPaymentEmailView') ?>">посмотреть текст письма</a>
+											<?php else: ?>
+												<small class="text-muted lh30">Письмо на оплату пока не отсылалось</small>
+											<?php endif; ?>
+										</div>
+									</div>
+								</div>
+
+							</div>
+						</div>
+					</div>
+				<?php endif; ?>
+
+
+				<?php if ($this->discountCard): ?>
+					<div class="panel panel-warning">
+						<div class="panel-heading" role="tab" id="discountCardHead">
+							<h4 class="panel-title">
+								<a role="button" data-toggle="collapse" data-parent="#accordion"
+									href="#discountCardBody" aria-expanded="false"
+									aria-controls="discountCardBody"><span class="fa fa-angle-right"></span> Информация по дисконтной карте</a>
+							</h4>
+						</div>
+						<div id="discountCardBody" class="panel-collapse collapse"
+							role="tabpanel" aria-labelledby="discountCardHead">
+							<div class="panel-body">
+
+								<table class="table table-striped">
+									<tbody>
+										<tr>
+											<td>№ карты</td>
+											<td><?= $this->discountCard->number ?></td>
+										</tr>
+										<tr>
+											<td>карта активна</td>
+											<td><?= $this->showBoolValue($this->discountCard->activity) ?></td>
+										</tr>
+										<tr>
+											<td>Скидка</td>
+											<td><?= $this->discountCard->discount ?>%</td>
+										</tr>
+										<tr>
+											<td>Дата выдачи</td>
+											<td><?= $this->discountCard->date_issue ?></td>
+										</tr>
+										<tr>
+											<td>Владелец</td>
+											<td><?= $this->discountCard->owner_name ?></td>
+										</tr>
+										<tr>
+											<td>Сумма</td>
+											<td><?= $this->discountCard->sum ?></td>
+										</tr>
+										<tr>
+											<td>Территория</td>
+											<td><?= $this->discountCard->area ?></td>
+										</tr>
+										<tr>
+											<td>Дата последней покупки</td>
+											<td><?= $this->discountCard->date_last_purchase ?></td>
+										</tr>
+										<tr>
+											<td>Покупок</td>
+											<td><?= $this->discountCard->count_purchase ?></td>
+										</tr>
+										<tr>
+											<td>Чеков</td>
+											<td><?= $this->discountCard->count_checks ?></td>
+										</tr>
+										<tr>
+											<td>Комментарий</td>
+											<td><?= $this->discountCard->comments ?></td>
+										</tr>
+										<tr>
+											<td>Адрес</td>
+											<td><?= $this->discountCard->address ?></td>
+										</tr>
+										<tr>
+											<td>Телефон</td>
+											<td><?= $this->discountCard->phone ?></td>
+										</tr>
+										<tr>
+											<td>e-mail</td>
+											<td><?= $this->discountCard->email ?></td>
+										</tr>
+										<tr>
+											<td>Код округа</td>
+											<td><?= $this->discountCard->area_code ?></td>
+										</tr>
+										<tr>
+											<td>Фиксированная скидка</td>
+											<td><?= $this->discountCard->discount_fixed ?></td>
+										</tr>
+										<tr>
+											<td>Марка машины</td>
+											<td><?= $this->discountCard->car_info ?></td>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				<?php endif; ?>
+
+
+				<div class="panel panel-default mt30">
+					<div class="panel-heading">
+						<h3 class="panel-title">Письмо с заказом</h3>
+					</div>
+					<div class="panel-body">
+
+						<div class="row">
+							<div class="col-sm-6">
+								<a
+									href="<?= $this->url(array('orderId' => $this->order->id), 'shop::adminOrderSendToClient') ?>"
+									class="btn btn-default btn-block <?= strlen($this->order->params->email) ? '' : 'disabled'?>"
+									title="Перейти к просмотру сообщения"><i
+									class="fa fa-envelope-o"></i> Отправить клиенту</a>
+							</div>
+							<div class="col-sm-6">
+								<?php if ($this->order->order_mail_sent): ?>
+									Письмо отправлено клиенту
+									<br><?= $this->showDate($this->order->order_mail_sent, 'KKK') ?>
+									<br><a href="<?= $this->url(array('orderId' => $this->order->id), 'shop::adminOrderEmailView') ?>">посмотреть текст письма</a>
+								<?php else: ?>
+									<small class="text-muted lh30">Письмо с заказом клиенту пока не отсылалось</small>
+								<?php endif; ?>
+							</div>
+						</div>
+
+					</div>
+				</div>
+
+				<div class="panel panel-default mt30">
+					<div class="panel-heading">
+						<h3 class="panel-title">Отправка СМС</h3>
+					</div>
+					<div class="panel-body">
+						<?php if ($this->order->params->phone): ?>
+							<script type="text/javascript" src="<?= $this->dataUrl ?>/js/modules/crm/sms.js?45"></script>
+							<div id="sms-form-container">
+							<?= $this->action('form', 'sms', 'crm', array('orderId' => $this->order->id, 'phone-number' => $this->order->params->phone)) ?>
+							</div>
+						<?php else: ?>
+							<small class="text-muted lh30">Не указан телефон клиента</small>
+						<?php endif; ?>
+					</div>
+				</div>
+
+				<?php if(!empty($this->orderLogs)): ?>
+					<?php
+						$typesLogMapper = new Shop_Model_Mapper_OrdersLogTypes();
+						$userMapper = new Users_Model_Mapper_User();
+					?>
+				<div class="panel panel-warning mt30">
+					<div class="panel-heading" role="tab" id="ordersLogs">
+						<h4 class="panel-title">
+							<a role="button" data-toggle="collapse" data-parent="#accordion"
+								href="#ordersLogsBody" aria-expanded="false"
+								aria-controls="ordersLogsBody"><span class="fa fa-angle-right"></span> Действия с заказом</a>
+						</h4>
+					</div>
+					<div id="ordersLogsBody" class="panel-collapse collapse"
+						role="tabpanel" aria-labelledby="ordersLogs">
+						<div class="panel-body">
+								<table class="table table-striped table-bordered">
+									<tr>
+										<th><?= $this->translate('Менеджер') ?></th>
+										<th><?= $this->translate('Действие') ?></th>
+										<th><?= $this->translate('Дата') ?></th>
+									</tr>
+									<?php foreach ($this->orderLogs as $log): ?>
+										<?php $user = $userMapper->find($log->manager);
+											if (!empty($user->email)) {
+												$managerEmail = 'Email: ' . $user->email;
+											}
+											if (!empty($user->internal_phone)) {
+												$managerPhone = '<br><span class="text-muted">' . $user->internal_phone . '</span>';
+											}
+										 ?>
+										<tr>
+											<td class="text-center"><?= $user ? '<a href="' . $this->url(array('id' => $user->id), 'users::userForm') .'"  data-toggle="popover" data-placement="top" data-trigger="hover" data-html="true" data-content="'.$managerEmail.'">' .$user->getRealname() . '</a>' . $managerPhone : '---'; ?></td>
+											<td class="text-center"><?= $typesLogMapper->find($log->action_type)->name; ?></td>
+											<td class="text-center"><?= $log->created; ?></td>
+										</tr>
+									<?php endforeach; ?>
+								</table>
+						</div>
+					</div>
+				</div>
+				<?php endif; ?>
+
+			</div>
+
+		</div>
+	</div>
+
+	<div class="control-panel">
+		<div class="row">
+			<div class="col-md-4">
+
+				<a href="#" class="button-add catalog-unit-popup-select" title="Добавить к заказу новый товар из каталога">из каталога</a>
+				<a href="#" class="button-add distrib-popup-select" title="Добавить к заказу новый товар от поставщиков">от поставщиков</a>
+
+			</div>
+			<div class="col-md-5 text-center">
+
+				<a href="<?= $this->url(array('id' => $this->order->id), 'shop::adminOrderAsExcel') ?>" title="Скачать как Excel-файл"
+					class="button"><span class="fa fa-download"></span> Excel</a>
+
+
+
+				<?php if ((strtotime(date('H:i')) > strtotime('07:00')) and (strtotime(date('H:i')) < strtotime('23:00'))){ ?>
+					<a href="<?= $this->url(array('id' => $this->order->id), 'shop::adminOrderAsXml') ?>" title="Скачать как XML-файл<?= $this->order->doc_type ? '' : ' ВЫБЕРИТЕ ВИД ДОКУМЕНТА!' ?>"
+						class="button <?= $this->order->doc_type ? '' : 'button-disable' ?>"><span class="fa fa-download"></span> XML</a>
+				<?php } ?>	
+				<?php /*
+				<a href="<?= $this->url(array('orderId' => $this->order->id), 'shop::adminOrderSendToClient') ?>"
+					class="button <?= strlen($this->order->params->email) ? '' : 'button-disable'?>"
+					><span class="fa fa-envelope-o"></span> Отправить клиенту</a>
+				*/?>
+
+			
+				<a target="_blank" id="printDoc" href="/shop/orders/print?id=<?= $this->order->id ?>"
+					class="button"><span class="fa fa-print"></span> На печать</a>
+			
+			
+				
+				<?php if ($this->order->doc_type > 0){ // Кирилл: кнопка LF (если есть тип документа) ?>
+					<?php // Временно пока блокируем для всех кроме МКАД-86
+							$link = mysqli_connect('193.169.179.232', 'konsbduser', '4L8n3K1jS1', 'main') or die ('Error connect db');
+							
+							$query = "SELECT `id`, `id_csv` FROM `_users` WHERE `id`= '".$this->order->manager."' ";
+							$result = mysqli_query($link, $query);
+							if (mysqli_fetch_assoc(mysqli_query($link, $query))['id_csv'] > 0){						
+					?>
+				
+							<?php if ($this->LFcountOrder == 0){ ?>
+								<script type="text/javascript">
+									function connectLF(){ // Кирилл: Кнопка LF
+										$datchik = 0; // Датчик - количество сделанных запросов в php каждые 2 секунды
+										
+										$error = 0; // Валидация: если каких-то данных не хватает в карточке заказа в админке, то показывает ошибку и не пускает нажать на кнопку LF
+										$errorMessage = 'Введите ';		
+										if ($('#doc_type').val() != 6){ // Если документ - "не пополнение ассортимента"
+											if ($('#contact_face').val().length == 0){ $error++; $errorMessage = $errorMessage + '"Контактное лицо", ';}								
+											if ($('#phone').val().length == 0){ $error++; $errorMessage = $errorMessage + '"Телефон", ';}							
+										}
+										if ($('#managerId').val() == 0){ $error++; $errorMessage = $errorMessage + '"Выберите менеджера", ';}
+                                        if (($('#doc_type').val() == 9) || ($('#doc_type').val() == 15) || ($('#doc_type').val() == 3)){ // Если документ - "609" или "264" или "088", то адрес обязательно
+                                            if ($('#address').html() == '') { $error++; $errorMessage = $errorMessage + '"Адрес доставки", ';}
+                                        }
+
+										if ($error == 0){
+											$('#resultLF').html('');							
+											$('#connectLFObject img').css('display', 'block'); // Показываем loader
+											$('#printDoc > span').css('background', 'transparent');
+											$('#printDoc > span').css('color', '#1c94c4');
+											
+											function waitingFromLF(){ // Функция - каждые три секунды запрос в php								
+												$datchik++;
+												if ($datchik == 20){ // Если 20 раз сработало и LF не выдал результата - то блокируем обновлялку (чтобы до ишачей пасхи не крутить обновлялку и не стучаться в php весь день)
+													clearInterval($flajok_scan);
+													alert('Нет ответа от LF');
+													$('#connectLFObject img').css('display', 'none');
+												}
+												if ($('#resultLF .result').html() == '1'){ // Если из LF пришел положительный ответ - выдаем кнопку "распечатать"
+													$('#connectLFObject img').css('display', 'none');
+                                                    if ($('#doc_type').val() == 4){ // Выводить договор только для ККМ иномарки
+                                                        $('#printDoc > span').css('background', 'green');
+                                                        $('#printDoc > span').css('color', '#fff');
+                                                        $('#printDoc').attr('href', $('#printDoc').attr('href') + '&kComand=add_to_lf&prepaid=<?php echo $this->order->params->prepaid; ?>&manager='+$('#managerId option:selected').text()+'&address_register='+$('#address_register').text()+'');
+                                                    }
+													$('#connectLFObject').css('display', 'none');
+													
+													clearInterval($flajok_scan);
+												} else { // Непосредственно сама обновлялка (стучимся в php: то место, где выдается xml)
+													$.ajax({
+														url:     '/admin/shop/orderAsXml/<?= $this->order->id ?>?kComand=add_to_lf',
+														type:     "POST",
+														dataType: "html",
+														data: $("#order-form").serialize(),
+														success: function(response) {
+															document.getElementById('resultLF').innerHTML = response;
+														},
+														error: function(response) {
+															document.getElementById('resultLF').innerHTML = "";
+														}
+													});									
+												}
+											}
+											var $flajok_scan = setInterval(waitingFromLF, 2000); // Интервал обновлялки: 3 секунды
+										} else {
+											alert($errorMessage);
+										}
+									}
+								</script>				
+							<?php } else { ?>
+                                <?php if ($this->LForderStatus == 'finish'){ ?>
+                                    <script type="text/javascript">
+                                        function connectLF(){
+                                            alert('Уже загружено в LF');
+                                        }
+                                        $(document).ready(function() { // Если ранее уже нажимали на кнопку и заказ обработан, то выводить в печать (чтобы перед печатью опять не нажимали на кнопку)
+                                            if ($('#doc_type').val() == 4){ // Выводить договор только для ККМ иномарки
+                                                $('#printDoc > span').css('background', 'green');
+                                                $('#printDoc > span').css('color', '#fff');
+                                                $('#printDoc').attr('href', $('#printDoc').attr('href') + '&kComand=add_to_lf&prepaid=<?php echo $this->order->params->prepaid; ?>&manager='+$('#managerId option:selected').text()+'&address_register='+$('#address_register').text()+'');
+                                            }
+                                        });
+                                    </script>
+                                <?php } else { ?>
+                                    <script type="text/javascript">
+                                        function connectLF(){
+                                            alert('Нет ответа от LF. Но загрузка идет. Для проверки статуса обнови страницу и нажми LF');
+                                        }
+                                    </script>
+                                <?php } ?>
+							<?php } ?>
+							<span style="position: relative;" id="connectLFObject"><input class="button" onclick="connectLF();" type="button" value="LF" /><img style="display: none; width: 50px; position: absolute; left: 0px; top: -15px;" src="https://www.xn--80aaasbafk1acftx0c6n.xn--p1ai/images/loader.gif"></span>
+							<div style="text-align: left;" id="resultLF"></div>
+					<?php } // end // Временно пока блокируем для всех кроме МКАД-86 ?>
+				<?php } // end Кирилл: кнопка LF ?>
+
+                <?php // NEW LF BUTTON ?>
+					<?php if ($this->user->getRole() == 'developer'): ?>
+                        <a target="_blank" href="<?php if ($this->order->doc_type == 4){ echo $this->url(array('orderId' => $this->order->id), 'shop::adminOrderPrintDoc'); } else {?>/shop/orders/print?id=<?= $this->order->id ?><?php } ?>" class="button"><span class="fa fa-print"></span> На печать</a>
+                        <span style="position: relative;">
+                            <input <?php if(($this->order->exportAllowed() === false) or ($this->order->clientContractOfSaleAllowed($this->order) === false)){ ?>disabled="disabled" title="Заполните обязательные поля"<?php } else { ?>onclick="runExchangeData();"<?php } ?> class="button" id="LFbutton" type="button" value="LF" />
+                        </span>
+					<?php endif; ?>
+                <?php // END NEW LF BUTTON ?>
+			
+
+			</div>
+			<div class="col-md-3 text-right">
+				<button type="submit" class="button-save">Сохранить</button>
+			</div>
+		</div>
+
+	</div>
+
+</form>
+

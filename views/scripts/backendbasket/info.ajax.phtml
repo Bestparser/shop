@@ -1,0 +1,20 @@
+<div id="shop-info" data-url="/shop/backendbasket/info?format=html">
+	<span class="pv-10">
+		<?= $this->translate('Корзина') ?>
+		
+		<?php /* if ($this->quantity): ?>
+			<a href="<?= Shop_Service_Config::getScheme()->getBasketUrl() ?>"
+				title="<?= $this->translate('Перейти в Корзину') ?>"><?= $this->translate('Корзина') ?></a>
+		<?php else: ?>
+			<?= $this->translate('Корзина') ?>
+		<?php endif; */ ?>
+	</span>
+	<?php if ($this->quantity): ?>
+		<a href="<?= Shop_Service_Config::getBackendScheme()->getBasketUrl() ?>" class="btn btn-info">
+			<?= $this->quantity ?>
+			/ <?= Lv7_Service_Text::asPrice($this->cost, 2) ?> р.
+		</a>
+	<?php else: ?>
+		<span class="quantity">(пока пусто)</span>	
+	<?php endif; ?>
+</div>

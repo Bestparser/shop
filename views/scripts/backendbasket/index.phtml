@@ -1,0 +1,16 @@
+<? echo $this->flashMessages(); ?>
+<p>
+<a href="<?= $this->url(array(), 'distrib::crossIndex') ?>" class="btn btn-default"><i class="fa fa-arrow-left"></i> вернуться к поиску</a>
+</p>
+<h1><?= $this->translate('Корзина') ?></h1>
+
+<div id="shop-basket-items-table">
+<?php
+include 'index.ajax.phtml';
+?>
+</div>
+<div style="height:100px">
+	<div id="shop-basket-items-table-confirm">
+	<?= $this->translate('Изменения сохранены!') ?>
+	</div>
+</div>

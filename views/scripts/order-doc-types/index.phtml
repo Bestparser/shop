@@ -1,0 +1,40 @@
+<?php
+// подключение плагина DataTables
+$this->dataTables();
+?>
+
+<h3><?= $this->translate('Типы документов') ?></h3>
+
+<p><a href="<?= $this->url(array('id' => 0), 'shop::orderDocTypesForm') ?>" 
+class="button-add"><?= $this->translate('Добавить') ?></a></p>
+
+<form class="form-std" id="filterForm" method="post" action="/shop/order-doc-types/filter">
+<div class="data-filter">
+<table>
+	<tr valign="top">
+		<td class="title">
+			<?= $this->translate('Фильтр') ?>
+		</td>
+		<td>
+			<?= $this->translate('Публикация') ?>:<br>
+			<div class="radio-button-set">
+			<?= $this->formRadio('fActivity', $this->fActivity, null, array(0 => 'все')) ?>
+			<?= $this->formRadio('fActivity', $this->fActivity, null, array(1 => 'публикуются')) ?>
+			<?= $this->formRadio('fActivity', $this->fActivity, null, array(2 => 'не публикуются')) ?>
+			</div>
+		</td>
+	</tr>
+</table>
+</div>
+</form>
+
+<table id="tDataTable" class="display" width="100%">
+<thead>
+	<tr>
+		<th><?= $this->translate('A.') ?></th>
+		<th><?= $this->translate('Название') ?></th>
+		<th><?= $this->translate('Сортировка') ?></th>
+		<th>&nbsp;</th>
+	</tr>
+</thead>
+</table>

@@ -1,0 +1,127 @@
+<?php
+
+// подключение плагина DataTables
+$this->dataTables();
+?>
+
+<h2><?= $this->translate('Заказы') ?></h2>
+
+<?php if (count($this->sites) < 2): ?>
+
+	<p><?= $this->translate('Заказов для просмотра не найдено...') ?></p>
+
+<?php else: ?>
+
+	<form class="form-std" id="filterForm" method="post" action="/shop/orders/filter">
+	<b><?= $this->translate('Фильтр') ?></b>
+	<div class="data-filter">
+		<table>
+			<tr valign="top">
+				<td>
+					<?= $this->translate('Сайт') ?>:
+					<div class="pdd-5-0">
+					<?= $this->formSelect('fSite', $this->fSite, array('class' => 'smooth'), $this->sites) ?>
+					</div>
+				</td>
+				<td>
+					<?= $this->translate('Регион доставки') ?>:
+					<div class="pdd-5-0">
+					<?= $this->formSelect('fDelivery', $this->fDelivery, array('class' => 'smooth'), $this->deliveryOptions) ?>
+					</div>
+				</td>
+				<td>
+					<?= $this->translate('Метод оплаты') ?>:
+					<div class="pdd-5-0">
+					<?= $this->formSelect('fPaymentMethod', $this->fPaymentMethod, array('class' => 'smooth'), $this->paymentMethodOptions) ?>
+					</div>
+				</td>
+				<td class="textRight" rowspan="2">
+					<br>
+					<?= $this->formSubmit('filter-button', 'искать', array('class'=>'button-save')) ?>
+				</td>
+			</tr>
+			<tr>
+				<td>
+					<?= $this->translate('Выборка за период') ?>:
+					<div class="pdd-5-0">
+					<?php
+					$after = new Lv7CMS_Form_Element_Date('fDateAfter');
+					$after->setAttrib('class', 'smooth');
+					$after->setLabel('с');
+					$after->setValue($this->fDateAfter);
+					echo $after->render($this);
+					?>
+					<?php
+					$before = new Lv7CMS_Form_Element_Date('fDateBefore');
+					$before->setAttrib('class', 'smooth');
+					$before->setLabel('по');
+					$before->setValue($this->fDateBefore);
+					echo $before->render($this);
+					?>
+					</div>
+				</td>
+				<td>
+					<?= $this->translate('Тип заказа') ?>:
+					<div class="pdd-5-0">
+					<?= $this->formSelect('fType', $this->fType, array('class' => 'smooth'), $this->typeOptions) ?>
+					</div>
+				</td>
+				<td>
+					<?= $this->translate('Менеджеры') ?>:
+					<div class="pdd-5-0">
+					<?= $this->formSelect('fManager', $this->fManager, array('class' => 'smooth'), $this->managerOptions) ?>
+					</div>
+				</td>
+
+			</tr>
+			<tr>
+				<td colspan="4">
+					<?= $this->translate('Статусы') ?>:
+					<?php foreach ($this->orderStatusOptions as $statusId => $statusName): ?>
+						<input type="checkbox" name="fStatus[]" id="status<?= $statusId ?>"
+							value="<?= $statusId ?>" <?= in_array($statusId, $this->fStatus) ? 'checked' : '' ?>>
+						<label for="status<?= $statusId ?>"><?= $statusName ?></label>
+						&nbsp;&nbsp;&nbsp;
+					<?php endforeach; ?>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="4">
+					<?= $this->translate('Виды документа') ?>:
+					<?php foreach ($this->orderDocTypesOptions as $docTypeId => $docTypeName): ?>
+						<input type="checkbox" name="fDocType[]" id="docType<?= $docTypeId ?>"
+							value="<?= $docTypeId ?>" <?= in_array($docTypeId, $this->fDocType) ? 'checked' : '' ?>>
+						<label for="docType<?= $docTypeId ?>"><?= $docTypeName ?></label>
+						&nbsp;&nbsp;&nbsp;
+					<?php endforeach; ?>
+				</td>
+			</tr>
+		</table>
+	</div>
+	</form>
+
+	<div class="pdd-5-0">
+		<?= $this->translate('Общая сумма отобранных заказов')?>: <big id="summary-total"></big>,
+		<?= $this->translate('из них товаров на сумму')?>: <big id="summary-goods"></big>,
+		<?= $this->translate('стоимость доставки')?>: <big id="summary-delivery"></big>
+	</div>
+
+	<table id="tDataTable" class="display" width="100%">
+	<thead>
+		<tr>
+			<th><?= $this->translate('Тип') ?></th>
+			<th><?= $this->translate('Сайт') ?></th>
+			<th><?= $this->translate('№') ?></th>
+			<th><?= $this->translate('Клиент') ?></th>
+			<th><?= $this->translate('Телефон/E-mail') ?></th>
+			<th><?= $this->translate('Доставк/Оплата') ?></th>
+			<th><?= $this->translate('Стоимость') ?></th>
+			<th><?= $this->translate('Дата') ?></th>
+			<th><?= $this->translate('Менеджер') ?></th>
+			<th><?= $this->translate('Статус') ?></th>
+			<th>&nbsp;</th>
+		</tr>
+	</thead>
+	</table>
+
+<?php endif; ?>

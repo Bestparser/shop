@@ -1,0 +1,39 @@
+
+<?php if ($this->presets): ?>
+<div id="shop-preset-box">
+<?php foreach ($this->presets as $preset): ?>
+	<div class="preset">
+		<span class="row-fluid">
+			<span class="span1">
+				<i class="fa fa-home fa-4x"></i>
+			</span>
+			<span class="span10">
+				<span class="row-fluid">
+					<span class="span6"><small><?= $this->translate('Доставка')?>:</small> <?= $preset['deliveryName'] ?></span>
+					<span class="span6"><small><?= $this->translate('Оплата')?>:</small> <?= $preset['paymentMethodName'] ?></span>
+				</span>
+				<span class="row-fluid">
+					<span class="span6"><small><?= $this->translate('Контактное лицо')?>:</small> <?= $preset['contact_face'] ?></span>
+					<span class="span6"><small><?= $this->translate('Телефон')?>:</small> <?= $preset['phone'] ?></span>
+				</span>
+				<span class="row-fluid">
+					<span class="span6"><small><?= $this->translate('E-mail')?>:</small> <?= $preset['email'] ?></span>
+					<span class="span6"><small><?= $this->translate('Адрес')?>:</small> <?= $preset['address'] ?></span>
+				</span>
+			</span>
+			<span class="span1">
+				<a href="<?= $this->url(array('id' => $preset['id']), 'shop::personalPresetDelete') ?>"
+					title="Удалить этот адрес доставки" 
+					onclick="return confirm('Вы действительно хотите удалить этот адрес доставки?');"
+					><i class="fa fa-times fa-lg"></i></a>
+			</span>
+		</span>
+	</div>
+<?php endforeach; ?>
+</div>
+
+<?php else: ?>
+	
+	<p>У Вас пока не сохранено ни одного адреса. Адреса доставки автоматически сохраняются, когда Вы делаете заказ на сайте.</p>
+	
+<?php endif; ?>

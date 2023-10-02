@@ -1,0 +1,33 @@
+<div class="box">
+	<div class="inner">
+	<?php if (is_array($this->models)): ?>
+		
+		<div class="acat-path">
+		<?php include 'path.inc.phtml'; ?>
+		</div>
+		
+		<ul class="acat-models">
+		<?php foreach($this->models as $model): ?>
+			<?php 
+			$name = $model['NAMESHORT']; // . ' (' . $model['NAMEFULL'] . ')'
+			$title =  str_replace('"', "'", $this->prefix . ' ' . $name);
+			?>
+		
+			<li><a href="<?= $this->url(array('model' => $model['ID']), 'acat::groups') ?>" class="left" 
+				title="<?= $title ?>"><img src="<?= $this->dataUrl ?>/<?= $model['PATHICON'] ?>"
+				alt="<?= $title ?>" title="<?= $title ?>" align="middle"></a>
+			<div class="left" style="width:600px;">
+			<a href="<?= $this->url(array('model' => $model['ID']), 'acat::groups') ?>" title="<?= $title ?>">	
+			<?= $model['NAMESHORT'] ?>
+			</a><br><small><?= $model['NAMEFULL'] ?></small></div>
+			<div class="clear"></div>
+			</li>
+		<?php endforeach; ?>
+		</ul>
+	
+	<?php endif; ?>
+	</div>
+	<div class="clear"></div>
+	<div class="top_bg"></div>
+	<div class="bot_bg"></div>
+</div>		

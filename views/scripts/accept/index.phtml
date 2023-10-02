@@ -1,0 +1,14 @@
+<div class="box">
+	<div class="inner">
+		<?php /*<h1><?= $this->translate('Оформление заказа') ?></h1>*/?>
+		<?php if (strlen($this->successText)): ?>
+			<div class="text-ok"><?= $this->successText ?></div>
+		<?php endif; ?>
+		<?php if (strlen($this->errorText)): ?>
+			<div class="text-error"><?= $this->errorText ?></div>
+		<?php endif; ?>
+	</div>
+	<div class="clear"></div>
+	<div class="top_bg"></div>
+	<div class="bot_bg"></div>
+</div>

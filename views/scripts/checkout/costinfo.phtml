@@ -1,0 +1,49 @@
+<?php /*
+<p><?= $this->translate('Способ оплаты') ?>: <strong><?= $this->paymentMethod->getName() ?></strong></p>
+*/?>
+<?php echo $this->YandexDeliveryPayload; // Кирилл yandexDelivery: для передачи payload ?>
+<?php echo $this->YandexDeliveryCost; // Кирилл yandexDelivery: для валидатора: в случае если цена не посчиталась ?>
+<div class="cost-info">
+	<div>
+		<span class="descr"><?= $this->translate('Стоимость товаров') ?>:</span> 
+		<span class="value"><?= Lv7_Service_Text::asPrice($this->goodsCost, 0) ?> р.</span>
+	</div>
+	<?php if ($this->discount): ?> 
+	<div>
+		<span class="descr"><?= $this->translate('Скидка') ?>:</span>
+		<span class="value"><?= $this->discount ?>%</span>
+	</div>
+	<?php endif; ?>
+	<?php if ($this->delivery != 'SelfDelivery' && $this->delivery != 'MMO'): ?>
+		<div>
+			<span class="descr"><?= $this->translate(($this->delivery == 'OtherCity') ? 'Стоимость доставки до ТК' : 'Стоимость доставки') ?>:</span> 
+			<span class="value">
+				<?php if ($_POST['delivery'] == 'MkadOut'){ ?>
+					<?php if ($_POST['kmMkad'] > 0){ // Кирилл: Починил 40 р за 1 км от МКАД ?>
+						<?php echo intval($this->deliveryCost) + (intval($_POST['kmMkad']) * 40); ?> р.
+					<?php } else { ?>
+						<?= Lv7_Service_Text::asPrice($this->deliveryCost, 0) ?> р.
+					<?php } ?>				
+				<?php } else { ?>
+					<?php if ($_POST['kmMkad'] > 0){ ?>
+						<?php echo intval($this->deliveryCost) ?> р.
+					<?php } else { ?>
+						<?= Lv7_Service_Text::asPrice($this->deliveryCost, 0) ?> р.
+					<?php } ?>				
+				<?php } ?>
+			</span>
+		</div>
+	<?php endif; ?>
+	<div class="total">
+		<span class="descr"><?= $this->translate('Итоговая стоимость') ?>:</span>
+		<?php if ($_POST['delivery'] == 'MkadOut'){ ?>
+			<?php if ($_POST['kmMkad'] > 0){ ?>
+				<span class="value"><?php echo intval($this->totalCost) + (intval($_POST['kmMkad']) * 40); ?> р.</span>	
+			<?php } else { ?>
+				<span class="value"><?= Lv7_Service_Text::asPrice($this->totalCost, 0) ?> р.</span>
+			<?php } ?>
+		<?php } else { ?>
+			<span class="value"><?= Lv7_Service_Text::asPrice($this->totalCost, 0) ?> р.</span>
+		<?php } ?>
+	</div>
+</div>

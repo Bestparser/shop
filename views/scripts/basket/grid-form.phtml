@@ -1,0 +1,22 @@
+<form method="POST" action="/shop/basket/update" class="shop-basket-form margin-clear">
+	
+	<div class="input-group input-group-sm">
+		<input type="text" name="quantity" value="{quantity}" size="7" class="form-control"
+			onfocus="this.select()" autocomplete="off" <?= $this->disabled ? 'disabled' : '' ?>>
+			
+		<div class="input-group-append">
+			<button class="btn btn-default margin-clear" type="submit" <?= $this->disabled ? 'disabled' : '' ?>
+				><i class="fa fa-shopping-cart"></i></button>
+		</div>
+	</div>
+	
+	<input type="hidden" name="uid" value="{uid}">
+	<input type="hidden" name="old_quantity" value="{quantity}">
+	<input type="hidden" name="stock" value="{stock}">
+	
+	<div class="shop-basket-in"><?= $this->translate('Товар в') ?> <a 
+		href="<?= Shop_Service_Config::getScheme()->getBasketUrl() ?>"><?= $this->translate('Корзине') ?></a></div>
+		
+	<div class="shop-basket-confirm"></div>
+	
+</form>

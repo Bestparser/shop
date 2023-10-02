@@ -1,0 +1,52 @@
+<?php if ($this->orders): ?>
+
+	<table class="table table-striped">
+		<thead>
+			<tr>
+				<th><?= $this->translate('Тип') ?></th>
+				<th><?= $this->translate('Сайт') ?></th>
+				<th><?= $this->translate('№') ?></th>
+				<th><?= $this->translate('Доставка/Оплата') ?></th>
+				<th><?= $this->translate('Стоимость') ?></th>
+				<th><?= $this->translate('Дата') ?></th>
+				<th><?= $this->translate('Статус') ?></th>
+				<th>&nbsp;</th>
+			</tr>
+		</thead>
+		<tbody>
+		<?php 
+		$sites = Lv7CMS::getInstance()->getSites();
+		$typesMapper = new Shop_Model_Mapper_OrderTypes();
+		$orderStatus = new Shop_Model_Mapper_OrderStatus();
+		?>
+		<?php foreach ($this->orders as $order): ?>
+			<?php 
+			$params['id'] = $order->id;
+			?>
+			<tr>
+				<td align="center"><?= ($order->type ? $typesMapper->find($order->type)->shortName : '---') ?></td>
+				<td><?= isset($sites[$order->site]) ? $sites[$order->site]->label : '---' ?></td>
+				<td align="center"><?= $order->number ?></td>
+				<td><small><?= $order->params->deliveryName . '<br>' . $order->params->paymentMethodName ?></small></td>
+				<td align="right"><?= Lv7_Service_Text::asPrice($order->params->totalCost, 0) . 'р.' ?></td>
+				<td><small><?= $this->showDate($order->created, 'KKK') ?></small></td>
+				<td><?= ($status = $orderStatus->find($order->status)) ? $status->name : '---' ?></td>
+				<td class="slim" nowrap="nowrap"><a href="<?= $this->url($params, 'shop::adminOrder') ?>"
+						class="button-edit"><?= $this->translate('изменить') ?></a>
+					<?php if ($this->user->getRole() == 'administrator'): ?>
+						<a href="<?= $this->urlFrom($params, 'shop::adminOrderDelete') ?>" 
+							class="button-delete" query="<?= $this->translate("Удалить заказ?") ?>"
+						><?= $this->translate('удалить') ?></a>
+					<?php endif; ?>
+				</td>
+			</tr>
+		<?php endforeach; ?>
+		</tbody>
+	</table>
+
+
+<?php else: ?>
+
+	<p><?= $this->translate('Заказов пока нет') ?></p>
+
+<?php endif; ?>

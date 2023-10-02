@@ -1,0 +1,35 @@
+<?php
+// подключение плагина DataTables
+$this->dataTables();
+?>
+
+<h3><?= $this->translate('Товары В пути') ?></h3>
+	<form class="form-std" id="filterForm" method="post" action="/shop/in-way/filter">
+	<b><?= $this->translate('Фильтр') ?></b>
+	<div class="data-filter">
+		<table>
+			<tr valign="top">
+				<td>
+					<?= $this->translate('Магазин') ?>:
+					<div class="pdd-5-0">
+					<?= $this->formSelect('fShopId', $this->fShopId, array('class' => 'form-control'), $this->shops) ?>
+					</div>
+				</td>
+			</tr>
+		</table>
+	</div>
+	</form>
+
+<table id="tDataTable" class="display" width="100%">
+<thead>
+	<tr>
+		<th><?= $this->translate('ID') ?></th>
+		<th><?= $this->translate('Товар') ?></th>
+		<th><?= $this->translate('Магазин') ?></th>
+		<th><?= $this->translate('Артикул') ?></th>
+		<th><?= $this->translate('Бренд') ?></th>
+		<th><?= $this->translate('Кол-во [В пути]') ?></th>
+		<!--<th>&nbsp;</th>-->
+	</tr>
+</thead>
+</table>

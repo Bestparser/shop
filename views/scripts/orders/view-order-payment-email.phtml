@@ -1,0 +1,7 @@
+<h2>Оплата заказа №<?= $this->order->number ?>: текст сообщения, отправленного клиенту</h2>
+<p>Дата и время отправки сообщения: <?= $this->showDate($this->order->payment_mail_sent, 'KKK') ?></p>
+<div class="panel panel-default">
+	<div class="panel-body">
+		<?= $this->order->payment_mail ?>
+	</div>
+</div>

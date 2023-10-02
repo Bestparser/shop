@@ -1,0 +1,7 @@
+<h2>Заказ №<?= $this->order->number ?>: текст сообщения, отправленного клиенту</h2>
+<p>Дата и время отправки сообщения: <?= $this->showDate($this->order->order_mail_sent, 'KKK') ?></p>
+<div class="panel panel-default">
+	<div class="panel-body">
+		<?= $this->order->order_mail ?>
+	</div>
+</div>

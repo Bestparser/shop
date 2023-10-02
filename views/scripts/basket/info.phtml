@@ -1,0 +1,19 @@
+<div id="shop-info">
+<span id="title">
+	<?php if ($this->quantity): ?>
+		<a href="<?= Shop_Service_Config::getScheme()->getBasketUrl() ?>"
+			title="<?= $this->translate('Перейти в Корзину') ?>"><?= $this->translate('Корзина') ?></a>
+	<?php else: ?>
+		<?= $this->translate('Корзина') ?>
+	<?php endif; ?>
+</span>
+<span id="quantity">
+	<?php if ($this->quantity): ?>
+		<a href="<?= Shop_Service_Config::getScheme()->getBasketUrl() ?>"
+			title="<?= $this->translate('Перейти в Корзину') ?>"><?= $this->quantity ?></a>
+	<?php else: ?>
+		<span>0</span>
+	<?php endif; ?>
+</span>	
+<span id="cost"><?= Lv7_Service_Text::asPrice($this->cost, 2) ?> р.</span>
+</div>

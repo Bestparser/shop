@@ -1,0 +1,139 @@
+<?php
+
+// подключение плагина DataTables
+$this->dataTables();
+?>
+
+<h2><?= $this->translate('Заказы') ?></h2>
+
+<?php if (count($this->sites) < 2): ?>
+
+	<p><?= $this->translate('Заказов для просмотра не найдено...') ?></p>
+
+<?php else: ?>
+
+	<form class="form-std" id="filterForm" method="post" action="/shop/orders/filter">
+	<b><?= $this->translate('Фильтр') ?></b>
+	<div class="data-filter">
+		<table style="width:100%;">
+			<tr>
+				<td class="col-xs-2">
+					<?= $this->translate('Сайт') ?>:
+					<div class="pdd-5-0">
+					<?= $this->formSelect('fSite', $this->fSite, array('class' => 'form-control', 'multiple' => 'multiple'), $this->sites) ?>
+					</div>
+				</td>
+				<td class="col-xs-2">
+					<?= $this->translate('Территория') ?>:
+					<div class="pdd-5-0">
+					<?= $this->formSelect('fTerritory', $this->fTerritory, array('class' => 'form-control', 'multiple' => 'multiple'), $this->territoryOptions) ?>
+					</div>
+				</td>
+				<td class="col-xs-2">
+					<?= $this->translate('Регион доставки') ?>:
+					<div class="pdd-5-0">
+					<?= $this->formSelect('fDelivery', $this->fDelivery, array('class' => 'form-control', 'multiple' => 'multiple'), $this->deliveryOptions) ?>
+					</div>
+				</td>
+				<td class="col-xs-2">
+					<?= $this->translate('Метод оплаты') ?>:
+					<div class="pdd-5-0">
+					<?= $this->formSelect('fPaymentMethod', $this->fPaymentMethod, array('class' => 'form-control', 'multiple' => 'multiple'), $this->paymentMethodOptions) ?>
+					</div>
+				</td>
+
+				<td class="col-xs-2">
+					<?= $this->translate('Тип заказа') ?>:
+					<div class="pdd-5-0">
+					<?= $this->formSelect('fType', $this->fType, array('class' => 'form-control', 'multiple' => 'multiple'), $this->typeOptions) ?>
+					</div>
+				</td>
+
+				<td class="col-xs-2">
+					<?= $this->translate('Статус оплаты') ?>:
+					<div class="pdd-5-0">
+					<?= $this->formSelect('fPaymentStatus', $this->fPaymentStatus, array('class' => 'form-control', 'multiple' => 'multiple'), $this->paymentOrderStatus) ?>
+					</div>
+				</td>
+
+			</tr>
+			<tr>
+				<td colspan="2">
+					<?= $this->translate('Выборка за период') ?>:
+					<div class="pdd-5-0">
+					<?php
+					$after = new Lv7CMS_Form_Element_Date('fDateAfter');
+					$after->setAttrib('class', 'form-control');
+					$after->setLabel('с');
+					$after->setValue($this->fDateAfter);
+					echo $after->render($this);
+					?>
+					<?php
+					$before = new Lv7CMS_Form_Element_Date('fDateBefore');
+					$before->setAttrib('class', 'form-control');
+					$before->setLabel('по');
+					$before->setValue($this->fDateBefore);
+					echo $before->render($this);
+					?>
+					</div>
+				</td>
+
+				<td>
+					<?= $this->translate('Менеджеры') ?>:
+					<div class="pdd-5-0">
+					<?= $this->formSelect('fManager', $this->fManager, array('class' => 'form-control'), $this->managerOptions) ?>
+					</div>
+				</td>
+
+				<td>
+					<?= $this->translate('Статусы') ?>:
+					<div class="pdd-5-0">
+					<?= $this->formSelect('fStatus', $this->fStatus, array('class' => 'form-control', 'multiple' => 'multiple'), $this->orderStatusOptions) ?>
+					</div>
+				</td>
+
+				<td>
+					<?= $this->translate('Виды документа') ?>:
+					<div class="pdd-5-0">
+					<?= $this->formSelect('fDocType', $this->fDocType, array('class' => 'form-control', 'multiple' => 'multiple'), $this->orderDocTypesOptions) ?>
+					</div>
+				</td>
+
+				<td class="text-right" style="vertical-align: middle;">
+					<br>
+					<?= $this->formSubmit('filter-button', 'Искать', array('class'=>'btn btn-primary')) ?>
+                    <button type="reset" class="btn btn-default" onclick="resetFilter()"><?= $this->translate('Сброс') ?></button>
+				</td>
+			</tr>
+
+		</table>
+	</div>
+	</form>
+
+	<div class="pdd-5-0">
+		<?= $this->translate('Общая сумма отобранных заказов')?>: <big id="summary-total"></big>,
+		<?= $this->translate('из них товаров на сумму')?>: <big id="summary-goods"></big>,
+		<?= $this->translate('стоимость доставки')?>: <big id="summary-delivery"></big>
+	</div>
+
+	<table id="tDataTable" class="display" width="100%">
+	<thead>
+		<tr>
+			<th><?= $this->translate('Тип') ?></th>
+			<th><?= $this->translate('Сайт') ?></th>
+			<th><?= $this->translate('№') ?></th>
+			<th><?= $this->translate('Клиент') ?></th>
+			<th><?= $this->translate('Телефон/E-mail') ?></th>
+			<th><?= $this->translate('Доставка/Оплата') ?></th>
+			<th><?= $this->translate('Стоимость') ?></th>
+			<th><?= $this->translate('Дата') ?></th>
+            <th><?= $this->translate('Территория/Ответственный') ?></th>
+            <th><?= $this->translate('Договор') ?></th>
+			<th><?= $this->translate('Менеджер') ?></th>
+			<th><?= $this->translate('Статус') ?></th>
+			<th>&nbsp;</th>
+		</tr>
+	</thead>
+	</table>
+
+<?php endif; ?>

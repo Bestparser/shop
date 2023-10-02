@@ -1,0 +1,31 @@
+<div class="box">
+	<div class="inner">
+	<?php if (is_array($this->marks)): ?>
+	
+		<div class="acat-path">
+		<?php include 'path.inc.phtml'; ?>
+		</div>
+			
+		<ul class="acat-marks">
+		<?php foreach($this->marks as $mark): ?>
+			<?php 
+			$name = $mark['NAMEFULL'] . ' (' . $mark['NAMESHORT'] . ')';
+			$title =  str_replace('"', "'", $name . ' ' . $this->postfix);
+			?>
+			<li><a href="<?= $this->url(array('type' => $mark['idtypeauto'], 'mark' => $mark['ID']), 'acat::models') ?>"
+				title="<?= $title ?>">
+			<img src="<?= $this->dataUrl ?>/<?= $mark['PATHICON'] ?>" width="32" height="32"
+				title="<?= $title ?>" align="absmiddle"></a>&nbsp;
+			<a href="<?= $this->url(array('type' => $mark['idtypeauto'], 'mark' => $mark['ID']), 'acat::models') ?>"
+				title="<?= $title ?>">
+			<?= $name ?></a>
+			</li>
+		<?php endforeach; ?>
+		</ul>
+	
+	<?php endif; ?>
+	</div>
+	<div class="clear"></div>
+	<div class="top_bg"></div>
+	<div class="bot_bg"></div>
+</div>		

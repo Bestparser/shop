@@ -1,0 +1,88 @@
+
+<?php if (!empty($this->order)): ?>
+
+	<?php 
+	Cms_Service_Tools::addTitleToPath('Заказ №' . $this->order->number, 'shop::personalOrders');
+	
+	$this->headTitle('Заказ №' . $this->order->number, Zend_View_Helper_Placeholder_Container_Abstract::SET);
+	?>
+		
+	<p>Дата заказа: <?= $this->showDate($this->order->created, 'KKK') ?></p>
+	<?php /*<p>Статус заказа: <strong><?= $this->order->statusName ? $this->order->statusName : '---' ?></strong></p>*/?>
+	<p><b><?= $this->translate('Список товаров')?>:</b></p>
+	<table class="light" width="100%">
+		<tr>
+			<th><?= $this->translate('Код') ?></th>
+			<th><?= $this->translate('Название') ?></th>
+			<th><?= $this->translate('Артикул') ?></th>
+			<th><?= $this->translate('Цена') ?></th>
+			<th><?= $this->translate('Кол-во') ?></th>
+			<th><?= $this->translate('Сумма') ?></th>
+		</tr>
+		<?php $total = 0; ?>
+		<?php foreach ((array) $this->posList as $pos): ?>
+			<?php 
+			$price = $pos->getClientPrice();
+			$quantity = $pos->getClientQuantity();
+			?>
+			<tr>
+				<td><?= $pos->code ?></td>
+				<td><?= $pos->getClientName() ?></td>
+				<td><?= $pos->articul ?></td>
+				<td align="right" nowrap="nowrap"><?= Lv7_Service_Text::asPrice($price, 0) ?> р.</td>
+				<td align="center"><?= $quantity ?></td>
+				<td align="right" nowrap="nowrap"><?= Lv7_Service_Text::asPrice($price * $quantity, 0) ?> р.</td>
+			</tr>
+			<?php $total += $quantity; ?>
+		<?php endforeach; ?>
+		<tr style="font-weight:bold;">
+			<td colspan="4"><?= $this->translate('Товары') ?></td>
+			<td align="center"><?= $total ?></td>
+			<td align="right" nowrap="nowrap"><?= Lv7_Service_Text::asPrice($this->order->params->goodsCost, 0) ?> р.</td>
+		</tr>
+		<tr>
+			<td colspan="5"><?= $this->translate('Доставка') ?></td>
+			<td align="right" nowrap="nowrap"><?= Lv7_Service_Text::asPrice($this->order->params->deliveryCost, 0) ?> р.</td>
+		</tr>
+		<tr style="font-weight:bold; font-size:1.2em;">
+			<td colspan="5"><?= $this->translate('Итого') ?></td>
+			<td align="right" nowrap="nowrap"><?= Lv7_Service_Text::asPrice($this->order->params->totalCost, 0) ?> р.</td>
+		</tr>
+	</table>
+	<br><br>
+	<p><b><?= $this->translate('Контактная информация') ?>:</b></p>
+	<div class="shop-user-order-info">
+	<p>
+		<small><?= $this->translate('Контактное лицо') ?>:</small> 
+		<big><?= $this->order->params->contactFace ?></big>
+		</p>
+	<p>
+		<small><?= $this->translate('Телефон') ?>:</small> 
+		<big><?= $this->order->params->phone ?></big>
+		</p>
+	<p>
+		<small><?= $this->translate('E-mail') ?>:</small> 
+		<big><?= $this->order->params->email ?></big>
+		</p>
+	<p>
+		<small><?= $this->translate('Адрес') ?>:</small> 
+		<big><?= $this->order->params->address ?></big>
+		</p>
+	<p>
+		<small><?= $this->translate('Способ доставки') ?>:</small> 
+		<big ><?= $this->order->params->deliveryName ?></big>
+		</p>
+	<p>
+		<small><?= $this->translate('Способ оплаты') ?>:</small> 
+		<big><?= $this->order->params->paymentMethodName ?></big>
+		</p>
+	<p>
+		<small><?= $this->translate('Дисконтная карта') ?>:</small> 
+		<big><?= $this->order->params->discountCard ?></big>
+		</p>
+	<p>
+		<small><?= $this->translate('Дополнительные пожелания') ?>:</small> 
+		<big><?= $this->order->params->comments ?></big>
+		</p>
+	</div>
+<?php endif; ?>

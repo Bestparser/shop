@@ -1,0 +1,442 @@
+<script language="JavaScript" type="text/javascript">
+  	var myWidth = 0, myHeight = 0;
+  	var picWidth = 0, picHeight = 0;
+  	var se;
+  	var labels = Array;
+
+  	var isIE = false;
+	if (/MSIE /.test(navigator.userAgent)) isIE = true;  	
+
+  	window.onresize = pictureSize; 
+  	window.onload = init; 
+
+	// Разбор GET для подсветки детали из поиска и т.п.
+  	
+  	var tmp = new Array();      // два вспомагательных
+  	var tmp2 = new Array();     // массива
+  	var param = new Array();
+  	var get = location.search;  // строка GET запроса
+  	
+  	if(get != '') {
+  	    tmp = (get.substr(1)).split('&');   // разделяем переменные
+  	    for(var i=0; i < tmp.length; i++) {
+  	        tmp2 = tmp[i].split('=');       // массив param будет содержать
+  	        param[tmp2[0]] = tmp2[1];       // пары ключ(имя переменной)->значение
+  	    }
+  	}
+
+  	// Получаем размеры окна
+	function getWindowSize()
+	{
+	    if( typeof( window.innerWidth ) == 'number' ) {
+	        //Non-IE
+	        myWidth = window.innerWidth;
+	        myHeight = window.innerHeight;
+	    } else if( document.documentElement && ( document.documentElement.clientWidth || document.documentElement.clientHeight ) ) {
+	        //IE 6+ in 'standards compliant mode'
+	        myWidth = document.documentElement.clientWidth;
+	        myHeight = document.documentElement.clientHeight;
+	    } else if( document.body && ( document.body.clientWidth || document.body.clientHeight ) ) {
+	        //IE 4 compatible
+	        myWidth = document.body.clientWidth;
+	        myHeight = document.body.clientHeight;
+	    }
+	}
+
+	// Получение элементов страницы	
+  	function getElement(name)
+  	{
+		if( typeof( name ) == 'object' )
+        	return name;
+            
+        if( document.getElementById( name ) )
+            return document.getElementById( name );
+            
+        return false;
+  	}
+
+ 	// Устновка размеров области просмотра картинки (должно задаваться точно - % от ширины и высоты не работают корректно)
+  	function pictureSize() {
+    	element = getElement('fPic_ac');
+    	getWindowSize();
+    
+    	if (element)
+    	{
+      		//element.style.width = '100%';//(myWidth-50)+'px';
+      		element.style.height = '350px';//(myHeight-200)+'px';
+    	}
+    
+    	//element = getElement('fZoom_ac');
+    	
+    	//if (element)
+      		//element.style.width =  '100%';//(myWidth-50)+'px';
+  	}
+
+  	function init()
+  	{
+		// Присваиваем события изображению
+  	  	
+    	se = getElement('fPic_ac');
+  
+    	se.onmousedown = down;
+    	se.onmouseup   = up;
+    	se.onmouseout = up;
+
+    	pictureSize();
+
+      	// Получаем оригинальные размеры картинки
+
+      	img = getElement('Image_ac');
+      	picWidth =img.width;
+      	picHeight = img.height;      	
+
+
+      	// Создаем DIV'ы на картинке из массива
+      	
+      	mainDiv = getElement('iPic_ac');
+
+      	var i = 0;
+      	
+      	while( labels[i] )
+        {          	
+            var divNode = document.createElement('DIV');
+            
+            divNode.className = 'nactiveLabel_ac';
+            divNode.style.position  = 'absolute';
+            divNode.style.top  = labels[i].top+'px';
+            divNode.style.left  = labels[i].left+'px';
+            divNode.style.width  = labels[i].width+'px';
+            divNode.style.height  = labels[i].height+'px';
+            divNode.setting  = labels[i]; 
+            divNode.id  = 'l'+labels[i].id;
+            divNode.style.fontSize =  parseInt((labels[i].width/(labels[i].label.length+1))*1.5)+'px';
+
+            divNode.onmouseover = function () { selectLabel(this); };
+            divNode.onmouseout = function () { unselectLabel(this); };            
+            divNode.onclick = function () { lm(this.setting.id, 'labels'); };
+
+            divNode.title = labels[i].alt; 
+            divNode.innerHTML = '<a class="labelFont_ac" >'+labels[i].label+'</a>'
+
+            mainDiv.appendChild( divNode );
+
+            i++;               			
+      	}
+
+		// Если передан ID детали - выделить ее 
+    	
+      	if (param['part'])
+      		lm(param['part'], 'parts');
+      	
+  	}
+
+	// Событие при нажатии кнопки мыши на картинке
+    
+  	function down(e)
+  	{
+    	if (isIE) {
+    	  	pX = window.event.clientX;
+      		pY = window.event.clientY;
+    	}
+    	else
+    	{
+      		pX = e.pageX;
+      		pY = e.pageY;
+    	}
+    	
+    	oldX = pX - (document.body.clientWidth - se.scrollLeft);
+    	oldY = pY - (document.body.clientHeight-se.scrollTop);
+    	
+    	se.onmousemove = move;
+
+    	return false;
+  	}
+
+  	// Событие при перетаскивании ихображения
+  
+  	function move(e)
+  	{
+    	if (isIE)
+    	{
+      		pX = window.event.clientX;
+      		pY = window.event.clientY;
+    	}
+    	
+    	else
+    	{
+      		pX = e.pageX;
+      		pY = e.pageY;
+    	}
+  
+    	X = pX - oldX;
+    	Y = pY - oldY;
+
+		se.scrollTop  = document.body.clientHeight-Y;
+		se.scrollLeft  = document.body.clientWidth-X;
+
+    	return false;
+  	}
+
+
+  	// Событие при отпускании кнопки мыши
+    
+  	function up()
+  	{
+    	se.onmousemove = null;
+    	return false;
+  	}
+
+
+	// Щелчок по позиции на картинке или в таблице запчастей
+    
+  	function lm(layerName, from)
+  	{
+  		isPos = false; // Признак наличия позиции на изображении
+    	area = getElement('iPic_ac'); // Получаем область с картинкой и позициями
+    	if (area)
+    	{
+        	// Бежим по всем элементам
+	  		for(i=0;i<area.getElementsByTagName("DIV").length;i++)
+	  		{
+		  		// Если ID элемента совпадает
+	    		if(area.getElementsByTagName("DIV")[i].id == 'l'+layerName)
+	    		{
+		    		// Меняем class 
+	      			area.getElementsByTagName("DIV")[i].className='activeLabel_ac';
+	      			// Сохряняем его в объект setting данного DIV (для того после наведения на него вид был прежний)	      		
+	      			area.getElementsByTagName("DIV")[i].setting.className='activeLabel_ac';
+	      			// Отмечаем что на рисунке найден
+		  			isPos = true;		  
+		  			
+			  		// Если щелкнули в таблице выводим позицию на рисунке в область видимости
+		  			if (from == 'parts')
+		  			{
+  	        			area.getElementsByTagName("DIV")[i].scrollIntoView(false);
+		    			area.getElementsByTagName("DIV")[i].focus();
+		  			}
+				}
+				else
+				{
+					// Меняем class и настройку всех остальных элементов на "неактивную"
+		  			area.getElementsByTagName("DIV")[i].className='nactiveLabel_ac';
+		  			area.getElementsByTagName("DIV")[i].setting.className='nactiveLabel_ac';
+				}
+	  		}
+    	}
+
+	   	// Получаем таблицы запчастей
+    	area = getElement('iTable_ac');
+    	if (area)
+    	{
+        	// Устанавливаем class элементов таблицы "неактивный"
+	  		for(i=0;i<area.getElementsByTagName("TR").length;i++)
+	  			area.getElementsByTagName("TR")[i].className='inactive_ac';
+    	}    	
+   
+    	// Получаем и меняем class элемента таблицы на "активный"
+    	part = getElement('pp'+layerName);
+    	part.className = 'active_ac';
+
+		// Если щелкнули в таблице - прокручиваем страницу в область картинки        
+		if (from == 'parts' && isPos)
+	  		document.location.hash = '#fPic_ac';
+
+		// Если щелкнули на позиции картинки - прокручиваем на позицию в таблице
+		if (from == 'labels')
+	  		document.location.hash = '#p'+layerName;
+
+  	}
+
+  	// Навели на позицию картинки    
+  	function selectLabel(label)
+  	{
+  		label.setting.className = label.className;
+    	label.className = 'selectLabel_ac';    
+  	}
+
+
+    // Убрали наведение на позицию картинки
+  	function unselectLabel(label)
+  	{
+    	label.className = label.setting.className;
+    	label.setting.className = label.className;
+    	
+  	}
+
+    // Навели на позицию таблицы 
+  	function selectPart(label)
+  	{
+  	  	if (label.className != 'active_ac' )
+    		label.className = 'select_ac';    
+  	}
+
+    // Убрали наведение с позиции таблицы
+  	function unselectPart(label)
+  	{
+  		if (label.className != 'active_ac' )
+    		label.className = '';
+  	}
+
+    // Изменение масштаба картинки
+  	function pictureZoom(prc)
+  	{
+  	  	// Получаем область с элементами картинки
+      	area = getElement('iPic_ac');
+
+      	// Пробегаем и изменяем размеры положение и шрифт элементов картинки
+      	for(i=0;i<area.getElementsByTagName("DIV").length;i++)
+	  	{
+      		lb = area.getElementsByTagName("DIV")[i];  	
+      		lb.style.top = parseInt(lb.setting.top*(prc/100))+'px';
+      		lb.style.left = parseInt(lb.setting.left*(prc/100))+'px';
+      		lb.style.width = parseInt(lb.setting.width*(prc/100))+'px';
+      		lb.style.height = parseInt(lb.setting.height*(prc/100))+'px';
+      		lb.style.fontSize =  parseInt((parseInt(lb.style.width)/(lb.setting.label.length+1))*1.5)+'px';
+        }
+
+      	// Изменяем размер самой картинки
+      	img = getElement('Image_ac');
+      	img.width =  parseInt(picWidth*(prc/100));
+      	img.height = parseInt(picHeight*(prc/100));
+
+      	// Если высота или высота картинки меньше высоты области - прокрутить вверх  
+      	if (parseInt(se.style.height) >= img.height)
+      		se.scrollTop = 0;  		  		
+        // Если высота или ширина картинки меньше штрины области - прокрутить влево
+      	if (parseInt(se.style.width) >= img.width)
+      		se.scrollLeft = 0;
+  	}
+
+	// Расчет масштаба  	
+  	function zoomM(prc)
+  	{
+  	  	// Получаем элемент со значением маштаба
+  	    element = getElement('zoomText_ac');
+
+  	    if (prc.substr(0,1) == '+' || prc.substr(0,1) == '-')
+  	    	zoom = (parseInt(element.value) + parseInt(prc)); // Увелечение и уменьшение
+  	    else if (prc == 'all') // Если показать всю картинку
+  	  	{
+  	      area = getElement('fPic_ac');
+  	      
+  	      if (picWidth > picHeight) zoom = Math.round((parseInt(area.style.height)/picHeight) * 100);
+  	      else zoom = Math.round((parseInt(area.style.width)/picWidth) * 100);
+  	    }
+  	    else 
+  	    	zoom = prc;
+
+	    element.value = zoom;
+	    pictureZoom(zoom);
+  	}
+
+
+<?
+	$rectangles = array();
+  			
+	$i = 0;
+  	foreach ($this->parts as $part)	{
+  		if ($part['IDRECTANGLE'] && !in_array($part['IDRECTANGLE'], $rectangles))
+  		{
+		?>
+			labels[<?=$i?>] = {id: <?=$part['ID']?>, left: <?=$part['X']?>, top: <?=$part['Y']?>, width: <?=$part['WIDTH']?>, height: <?=$part['HEIGHT']?>, label: '<?=$part['LABEL']?>', alt: '[<?=$part['NUMBER']?>] <?=$part['NAME']?>'};
+		<?
+  			$rectangles[] = $part['IDRECTANGLE'];
+  			$i++;
+  		}
+  	}
+?>	  
+
+</script>
+
+<div class="box">
+	<div class="inner">
+	<?php if (is_array($this->parts)): ?>
+		
+		<div class="acat-path">
+		<?php include 'path.inc.phtml'; ?>
+		</div>
+		
+		<table width="100%" class="acat-sibling-nav">
+			<tr>
+		    	<td width="33%">
+		    		<?php if (isset($this->groupPrev)): ?>
+			    		<a 
+				    		href="<?= $this->url(array('group' => $this->groupPrev['ID'], 'model' => $this->model['ID']), 'acat::parts') ?>"
+				    		title="<?= str_replace('"', "'", $this->groupPrev['NAME'] . ' ' . $this->model['NAMESHORT']) ?>"
+				    		>&larr; <?= $this->groupPrev['NAME'] ?></a>
+					<?php endif; ?>
+				</td>
+		    	<td width="33%" align="right">
+		    		<?php if (isset($this->groupNext)): ?>
+			    		<a 
+				    		href="<?= $this->url(array('group' => $this->groupNext['ID'], 'model' => $this->model['ID']), 'acat::parts') ?>"
+				    		title="<?= str_replace('"', "'", $this->groupNext['NAME'] . ' ' . $this->model['NAMESHORT']) ?>"
+				    		><?= $this->groupNext['NAME'] ?> &rarr;</a>
+					<?php endif; ?>
+				</td>
+				    	
+		  	</tr>
+		</table>		
+		
+		<div id="fPic_ac" name="fPic_ac" class="fPic_ac">
+			<div id="iPic_ac" name="iPic_ac" style="position: relative;">
+				<img src="<?= $this->dataUrl ?>/data/<?=$this->model['PATHIMAGE']?><?=$this->group['PICTUREINDEX']?>" border="0" alt="<?=$this->group['NAME']?> <?=$this->model['NAMESHORT']?>" title="<?=$this->group['NAME']?> <?=$this->model['NAMESHORT']?>" name="Image_ac" id="Image_ac" style="cursor: move;">
+			</div>
+		</div>
+		
+		<div id="fZoom_ac" name="fZomm_ac" class="fZoom_ac">
+			<b>Масштаб: </b> <input type="text" name="zoomText_ac" id="zoomText_ac" value="100" style="width: 50px;" onkeyup="zoomM(this.value);"> <a onClick="zoomM('-20')"><span class="button_ac">-</span></a> <a onClick="zoomM('+20')"><span class="button_ac">+</span></a>&#160;&#160;<a href="#" onClick="zoomM('100'); return false;" class="link_ac">100%</a>&#160;&#160;<a href="#" onClick="zoomM('all'); return false;" class="link_ac">Изображение целиком</a>
+		</div>
+				
+		<table cellspacing="2" cellpadding="3" border="0" width="100%" class="partsTable_ac" id="iTable_ac">
+			<tr>
+				<th width="5%"><b>№</b></th>
+				<th width="35%"><b>Номер детали</b></th>
+				<th width="65%"><b>Наименование детали</b></th>
+				<th></th>
+			</tr>
+			<?	
+				$_parts = array();
+				
+				foreach ($this->parts as $part)
+				{
+					if (!in_array($part['ID'], $_parts))
+					{
+						?>
+						<tr style="cursor: pointer;" id="pp<?=$part['ID']?>" onmouseover="selectPart(this);" onmouseout="unselectPart(this);" > <?php // ?>
+							<td onclick="lm('<?=$part['ID']?>', 'parts')" >
+							 	<a name="p<?=$part['ID']?>"></a>
+							 	<?=$part['POSITIONNO']?>
+							</td>
+							
+							<td onclick="lm('<?=$part['ID']?>', 'parts')" >
+								<?=$part['NUMBER']?>
+							</td>
+							<td onclick="lm('<?=$part['ID']?>', 'parts')" >
+								<?=$part['NAME']?>
+								<div id="note<?=$part['ID']?>" style="display: none; font-size: 8pt; background-color: silver;">
+									<?
+									if ($part['added'])
+									{
+										foreach ( $part['added'] as $__k => $__v )
+											echo $__v['name'].': '.$__v['value'].'<br>';
+									}
+									?>
+								</div>
+							</td>
+							<td style="white-space: nowrap;">&nbsp;</td>
+						</tr>
+						<?
+						$_parts[] = $part['ID'];
+					}
+				}
+		?>
+		</table>		
+		
+	
+	<?php endif; ?>
+	</div>
+	<div class="clear"></div>
+	<div class="top_bg"></div>
+	<div class="bot_bg"></div>
+</div>		

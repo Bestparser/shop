@@ -1,0 +1,8 @@
+<?php
+if ($this->mode == 'add') {
+	echo $this->translate('Товар добавлен в корзину!');
+} elseif ($this->mode == 'update') {
+	echo $this->translate('Кол-во изменено!');
+} elseif ($this->mode == 'delete') {
+	echo $this->translate('Товар удален из корзины!');
+}

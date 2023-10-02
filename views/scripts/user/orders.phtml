@@ -1,0 +1,45 @@
+<h1><?= $this->translate('История заказов') ?></h1>	
+
+<div class="box">
+	<div class="inner">
+		
+		<?php if ($this->items) : ?>
+		
+		<table class="light" width="100%">
+		<tr>
+			<th><?= $this->translate('Номер заказа') ?></th>
+			<th><?= $this->translate('Доставка') ?></th>
+			<th><?= $this->translate('Способ оплаты') ?></th>
+			<th><?= $this->translate('Стоимость заказа') ?></th>
+			<th><?= $this->translate('Сайт') ?></th>
+			<th><?= $this->translate('Дата заказа') ?></th>
+		</tr>
+		<?php foreach ($this->items as $item) : ?>
+			<tr>
+				<td align="center"><a href="<?= $this->url(array('id' => $item->id, 'page' => $this->currentPage), 'shop::userOrder') ?>" 
+						><big><?= $item->number ?></big></a>
+				</td>
+				<td><?= $item->params->deliveryName ?></td>
+				<td><?= $item->params->paymentMethodName ?></td>
+				<td align="right" nowrap="nowrap"><?= Lv7_Service_Text::asPrice($item->params->totalCost, 2) ?> р.</td>
+				<td><?= $this->sites[$item->site]->label ?></td>
+				<td><?= $this->showDate($item->created) ?></td>
+			</tr>   
+		<?php endforeach; ?>
+		</table>
+
+		<div class="buttons-paginator-box">
+		<?= $this->paginator ?>
+		</div>
+		
+		<?php else: ?>
+
+		<p><?= $this->translate('Вы пока не сделали ни одного заказа') ?></p>
+
+		<?php endif; ?>
+		
+	</div>
+	<div class="clear"></div>
+	<div class="top_bg"></div>
+	<div class="bot_bg"></div>
+</div>

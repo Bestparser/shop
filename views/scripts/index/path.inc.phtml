@@ -1,0 +1,51 @@
+<h1><?= $this->translate('Автокаталог') ?></h1>
+<?php
+	$links = array();
+	if (is_array($this->crumbs)) {
+		$links[-1]['url'] = $this->url(array(), 'acat::index');
+		$links[-1]['name'] = $this->translate('В начало');
+
+		if (isset($this->parts)) {
+			$this->crumbs[3] = array(0=>array('name' => $this->group['NAME'], 'select' => 1));
+		}
+		
+		foreach ($this->crumbs as $i => $crumbSet) {
+			$crumb = null;
+			foreach ($crumbSet as $c) {
+				if ($c['select']) {
+					$crumb = $c;
+					break;
+				}
+			}
+			if ($crumb) {
+				switch ($i) {
+					case 0:
+						if (isset($this->crumbs[$i+1])) {
+							$links[$i]['url'] = $this->url(array('type' => $crumb['id']), 'acat::marks');
+						}
+						break;
+					case 1:
+						if (isset($this->crumbs[$i+1])) {
+							$links[$i]['url'] = $this->url(array('type' => $crumb['typeauto'], 'mark' => $crumb['id']), 'acat::models');
+						}
+						break;
+					case 2:
+						if (isset($this->crumbs[$i+1])) {
+							$links[$i]['url'] = $this->url(array('model' => $crumb['id']), 'acat::groups');
+						}
+						break;
+				}
+				$links[$i]['name'] = $crumb['name'];
+			}
+		}
+		
+		
+		foreach ($links as $link) {
+			if ($link['url']) {
+				echo '<a href="' . $link['url'] . '">' . $link['name'] . '</a> &rarr; ';
+			} else {
+				echo '<h2>' . $this->pageTitle . '</h2>';
+			}
+		}
+	}
+

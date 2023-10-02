@@ -1,0 +1,63 @@
+<div class="box unit-page">
+	<div class="inner">
+		<h1><?= $this->translate('Оформление заказа') ?></h1>
+		
+		<?php if ($this->smallOrderAmount): ?>
+			<div class="alert alert-info text-center mb-10">
+				<i class="fa fa-warning"></i> <strong>Внимание!</strong> <br>
+				Минимальная сумма заказа с доставкой в нашем магазине 
+				составляет <?= $this->minOrderAmount ?> р. Способ получения товара для данного заказа 
+				возможен только "Самовывоз".
+			</div>
+			<?= $this->formHidden('smallOrderAmount', '1') ?>
+		<?php endif; ?>
+			
+		<?php if ($this->userGuest): ?>	
+			<?= $this->authorizeText ?>
+			<div class="shop-auth-box">
+			<?= $this->authForm ?>
+			</div>
+		<?php elseif($this->presets): ?>
+			<p><?= $this->translate('Укажите вариант оформления заказа. Выбранный вариант будет подставлен в форму ниже') ?></p>
+			<div id="shop-preset-box">
+			<script type="text/javascript">
+			var presetData = [];			
+			<?php foreach ($this->presets as $preset): ?>
+				presetData[<?= $preset['id'] ?>] = {
+						delivery: '<?= $preset['delivery'] ?>',
+						mileage: '<?= $preset['mileage'] ?>',
+						paymentMethod: '<?= $preset['paymentMethod'] ?>',
+						contactFace: '<?= $preset['contact_face'] ?>',
+						phone: '<?= $preset['phone'] ?>',
+						email: '<?= $preset['email'] ?>',
+						address: '<?= $preset['address'] ?>'
+						}
+			<?php endforeach; ?>
+			</script>
+			<?php foreach ($this->presets as $preset): ?>
+				<a class="preset" href="#" onclick="pasteCheckoutData(this, <?= $preset['id'] ?>);  return false;">
+				<small><?= $this->translate('Доставка')?>:</small> <?= $preset['deliveryName'] ?><br>
+				<small><?= $this->translate('Оплата')?>:</small> <?= $preset['paymentMethodName'] ?><br>
+				<small><?= $this->translate('Контактное лицо')?>:</small> <?= $preset['contact_face'] ?><br>
+				<small><?= $this->translate('Телефон')?>:</small> <?= $preset['phone'] ?><br>
+				<small><?= $this->translate('E-mail')?>:</small> <?= $preset['email'] ?><br>
+				<small><?= $this->translate('Адрес')?>:</small> <?= $preset['address'] ?><br>
+				</a>
+			<?php endforeach; ?>
+			</div>
+			<div class="clear"></div>
+		<?php endif; ?>
+		
+		<div class="checkout-form">
+			<?= $this->form ?>
+		</div>
+		
+		<div class="payment-info-text">
+			<?= $this->textTemplates->shopCheckoutPaymentText->getText() ?>
+		</div>		
+		
+	</div>
+	<div class="clear"></div>
+	<div class="top_bg"></div>
+	<div class="bot_bg"></div>
+</div>

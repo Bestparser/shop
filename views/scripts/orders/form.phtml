@@ -1,0 +1,5 @@
+<?php
+$this->dataTables();
+echo $this->flashMessages();
+?>
+<div data-lazy-url="/admin/shop/order/<?php echo $this->order->id;?>?format=html" data-lazy-callback="loadingOrderPage();" class="lazy-container"></div>

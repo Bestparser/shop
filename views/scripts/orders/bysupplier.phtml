@@ -1,0 +1,74 @@
+
+<p><a href="<?= $this->url(array(), 'distrib::suppliers') ?>" class="button-back">к списку поставщиков</a></p>
+
+<h2><?= $this->supplier->name ?>: товары в заказе</h2>
+
+<form class="form-std" method="post">
+<b><?= $this->translate('Фильтр') ?></b>
+<div class="data-filter">
+	<table>
+		<tr>
+			<td>
+				<div class="pdd-20">
+					<?= $this->translate('Статусы') ?>:
+					<?php foreach ($this->posStatusOptions as $statusId => $statusName): ?>
+						<input type="checkbox" name="fPosStatus[]" id="status<?= $statusId ?>" 
+							value="<?= $statusId ?>" <?= in_array($statusId, $this->fPosStatus) ? 'checked' : '' ?>>
+						<label for="status<?= $statusId ?>"><?= $statusName ?></label>
+						&nbsp;&nbsp;&nbsp;
+					<?php endforeach; ?>
+				</div>
+			</td>
+			<td>
+				<button type="submit" class="button-save">искать</button>
+			</td>
+		</tr>
+	</table>
+</div>
+</form>
+
+<?php if ($this->posList): ?>
+	<form method="POST" class="form-std">
+				
+		<table class="table">
+			<tr>
+				<th><?= $this->translate('Заказ') ?></th>
+				<th><?= $this->translate('Название') ?></th>
+				<th><?= $this->translate('Артикул') ?></th>
+				<th><?= $this->translate('Цена поставщика') ?></th>
+				<th><?= $this->translate('Наличие') ?></th>
+				<th><?= $this->translate('Цена для клиента') ?></th>
+				<th><?= $this->translate('Кол-во') ?></th>
+				<th><?= $this->translate('Статус') ?></th>
+				<th>&nbsp;</th>
+			</tr>
+			<?php 
+			$total = 0; 
+			?>
+			<?php foreach ((array) $this->posList as $pos): ?>
+				<tr>
+					<td nowrap><a href="<?= $this->url(array('id' => $pos->order), 'shop::adminOrder') ?>">Заказ №<?= $this->orders[$pos->order]->number ?></a></td>
+					<td><?= $pos->name ?></td>
+					<td><?= $pos->articul ?></td>
+					<td align="right" nowrap="nowrap"><?= $pos->unit ? Lv7_Service_Text::asPrice($pos->unit->price, 2) . ' р.' : '---' ?></td>
+					<td align="center"><?= $pos->unit ? $pos->unit->stock : '---' ?></td>
+					<td align="right" nowrap="nowrap"><?= Lv7_Service_Text::asPrice($pos->price, 2) ?> р.</td>
+					<td align="center"><?= $pos->quantity ?></td>
+					<td><?= $this->formSelect('status_' . $pos->id, $pos->status, array('class' => 'smooth'), $this->posStatusOptions) ?></td>
+				</tr>
+				<?php $total += $pos->quantity; ?>
+			<?php endforeach; ?>
+		</table>
+		<div class="textRight">
+		<?= $this->formSubmit('', 'Сохранить изменения', array(
+											'class' => 'button-save', 
+										)) ?>
+		</div>
+		<input type="hidden" value="1" name="updatePosStatus" />
+	</form>
+<?php else: ?>
+	<p>Позиций не найдено</p>
+<?php endif; ?>
+
+
+

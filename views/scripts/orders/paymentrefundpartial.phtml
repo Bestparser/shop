@@ -1,0 +1,109 @@
+<h2><?php if(!empty($this->posReturned)): ?>Возврат товаров<?php else: ?>Выберите товары для возврата<?php endif; ?></h2>
+<?php if ($this->itemsList): ?>
+<form action="<?= $this->url(array('orderId' => $this->order->id), 'shop::adminReturnSave') ?>" class="form-std" method="POST" id="return-form">
+<div class="table-responsive">
+    <table class="table table-striped table-bordered table-hover table-condensed">
+        <thead>
+            <tr>
+              <th>Код</th>
+              <th>Название</th>
+              <th>Возвращено / Осталось</th>
+              <th>Цена</th>
+              <th>Кол-во для возврата / Кто вернул</th>
+              <th>Дата возврата</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($this->itemsList as $item):?>
+                <input type="hidden" class="itemId" name="item_<?= $item->id; ?>" value="<?= $item->id; ?>">
+                <tr>
+                    <?php
+                        if (!empty($this->posReturned['delivery']) && $this->posReturned['delivery']->quantity && $item->code == 'delivery') {
+                           $item->quantity -= 1;
+                        }
+                    ?>
+                    <td><?= $item->code; ?></td>
+                    <td><?= $item->name; ?></td>
+                    <td><?php if($this->posReturned[$item->code]->quantity):?><?= $this->posReturned[$item->code]->quantity;?><?php else: ?> 0 <?php endif; ?> / <?= $item->quantity; ?></td>
+                    <td><?= $item->price;?> р.</td>
+                    <?php
+                    $returnQty = 0;
+                    if ($this->posReturned[$item->code]->code == $item->code) {
+                        $returnQty = $this->posReturned[$item->code]->quantity - $item->quantity;
+                    }
+                    ?>
+                    <td><?php if ($item->quantity && !$returnQty || $item->quantity): ?>
+                        <select class="form-control select-qty-return" id="select-qty">
+                            <option value="Не возвращать">Не возвращать</option>
+                            <option value="Полный возврат">Полный возврат</option>
+                            <option value="Частичный возврат">Частичный возврат</option>
+                        </select>
+                        <input type="text" style="margin-top:5px;" name="returnQty_<?= $item->id; ?>" class="form-control input-qty-return" value="0" placeholder="Кол-во для возврата">
+                        <input type="hidden" class="maximumQty" value="<?= $item->quantity; ?>">
+                        <div class="shop-basket-confirm" style="display:none;">Нельзя вернуть больше купленного</div>
+                        <?php else: ?>
+                            Уже возвращен / <?php if($this->posReturned[$item->code]->user):?><? $user = $this->mapperUser->find($this->posReturned[$item->code]->user);?><a href="/admin/users/form/<?= $user->id;?>"><?= $user->username; ?></a><?php endif; ?>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                    <?php if($this->posReturned[$item->code]->created):?>
+                        <?php   $date = new Zend_Date($this->posReturned[$item->code]->created);
+                                $text = $date->toString('KKKK'); ?>
+                        <?= $text; ?>
+                    <?php else: ?>
+                            ---
+                    <?php endif; ?>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+    <div class="col-md-6">
+        <a class="btn btn-default" href="<?= $this->url(array('id' => $this->order->id), 'shop::adminOrder'); ?>" role="button">Назад к заказу</a>
+    </div>
+    <div class="col-md-6 text-right">
+        <button type="submit" id="submitBtn" class="button-save" onclick="return confirm('Вы уверены?')">Сохранить</button>
+    </div>
+</div>
+</form>
+<?php else: ?>
+<p>Не найдены товары для заказа</p>
+<?php endif; ?>
+<script>
+    var allInput = $('.input-qty-return');
+    allInput.hide();
+
+    $('select.select-qty-return').each(function() {
+        var select = $(this);
+        var submitBtn = $('#submitBtn');
+        $(select).on('change', function() {
+            var selector = $(this);
+            var value = $(this).val();
+            var input = $(selector).next('.input-qty-return');
+            var maxQty = $(input).next('.maximumQty');
+            var maxQtyValue = $(maxQty).val();
+            var confirmBox = $(maxQty).next('.shop-basket-confirm');
+            $(input).on('change', function() {
+                var inputValue = $(this).val();
+                if (inputValue > maxQtyValue) {
+                    confirmBox.show();
+                    $(submitBtn).attr('disabled', true);
+                } else {
+                    confirmBox.hide();
+                    $(submitBtn).attr('disabled', false);
+                }
+            });
+            if (value == 'Частичный возврат') {
+                input.show();
+                input.attr('value', 0);
+            } else if(value == 'Полный возврат') {
+                input.show();
+                input.attr('value', maxQtyValue);
+            } else {
+                input.attr('value', 0);
+                input.hide();
+            }
+        });
+    });
+
+</script>

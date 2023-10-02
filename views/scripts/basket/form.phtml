@@ -1,0 +1,40 @@
+<form method="POST" action="/shop/basket/update" class="shop-basket-form">
+<?php
+$params = array(
+		'size' => 7,
+		'class' => 'shop-basket-input',
+		'onfocus' => 'this.select()',
+		'autocomplete' => 'off');
+if ($this->disabled) {
+	$params['disabled'] = 'disabled';
+	$params['title'] = 'Недоступно для заказа';
+}
+echo $this->formText('quantity', '{quantity}', $params); ?>
+<?php
+$params = array(
+		'class' => 'shop-basket-button',
+		'title' => 'Добавить в корзину');
+if ($this->disabled) {
+	$params['disabled'] = 'disabled';
+	$params['title'] = 'Недоступно для заказа';
+}
+echo $this->formSubmit('submit', 'OK', $params) ?>
+<?= $this->formHidden('uid', '{uid}') ?>
+<?= $this->formHidden('old_quantity', '{quantity}') ?>
+<?= $this->formHidden('stock', '{stock}') ?>
+<?= $this->formHidden('delivery_day', '{delivery_day}') ?>
+<?= $this->formHidden('min_order', '{min_order}') ?>
+<div class="clear"></div>
+<div class="shop-basket-in"><?= $this->translate('Товар в') ?> <a
+	href="<?= Shop_Service_Config::getScheme()->getBasketUrl() ?>"><?= $this->translate('Корзине') ?></a></div>
+<div class="shop-basket-confirm"></div>
+<ul class="shop-basket-substitution">
+	<li><a href="#">1</a></li>
+	<li><a href="#">2</a></li>
+	<li><a href="#">3</a></li>
+	<li><a href="#">4</a></li>
+	<li><a href="#">5</a></li>
+	<li><a href="#" class="more"><?= $this->translate('больше') ?></a></li>
+	<li><a href="#" class="delete"><?= $this->translate('удалить') ?></a></li>
+</ul>
+</form>

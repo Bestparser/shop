@@ -1,0 +1,187 @@
+<?php if ($this->items): ?>
+	<form method="POST" action="<?= Shop_Service_Config::getBackendScheme()->getBasketUrl() ?>" id="shop-basket-form-full">
+	<div class="panel p10 br4 bw1 br-light">
+		<table class="table table-striped">
+			<thead>
+				<tr>
+					<th><?= $this->translate('Бренд') ?></th>
+					<th><?= $this->translate('Номер') ?></th>
+					<th><?= $this->translate('Название') ?></th>
+					<th><?= $this->translate('Артикул') ?></th>
+					<th><?= $this->translate('Доставка') ?></th>
+					<th><?= $this->translate('Кол-во') ?></th>
+					<th><?= $this->translate('Стоимость') ?></th>
+					<th><?= $this->translate('На кассу') ?></th>
+					<th><?= $this->translate('Удалить') ?></th>
+				</tr>
+			</thead>
+			<tbody>
+			<?php
+			$warehouseBuffer = array();
+			$allToCashbox = true;
+			?>
+
+			<?php foreach ($this->items as $item): ?>
+				<?php
+				if ($item->getToCashbox() == 1) {
+					$warehouseBuffer[] = $item->getCode() . "\t" . $item->getQuantity();
+				}
+				$trClass = $item->getToCashbox() ? 'success' : '';
+				if ($item->canBeSentToCashbox && !$item->getToCashbox()) {
+					$allToCashbox = false;
+				}
+				?>
+				<tr class="<?= $trClass ?>">
+					<td><?= $item->getManBrand() ?></td>
+					<td><?= $item->getManNumber() ?></td>
+					<td>
+						<?= strlen($item->getCode()) ? '<code>' . $item->getCode() . '</code><br>' : '' ?>
+						<?= $item->getName() ?>
+					</td>
+					<td><?= $item->getArticul() ?></td>
+					<td align="center"><?= $item->getDeliveryTerms() ? $item->getDeliveryTerms() : 'на складе' ?></td>
+					<td class="slim"><?= $this->formText('q_' . $item->getUid(), $item->getQuantity(), array(
+						'size' => 5,
+						'class' => 'shop-basket-input',
+						'onfocus' => 'this.select();'
+						)) ?>
+						</td>
+					<td align="right">
+						<?php if ($item->getQuantity() > 1): ?>
+							<small><small>
+								<?= Lv7_Service_Text::asPrice($item->getPrice(), 2) ?> x <?= $item->getQuantity() ?> =
+							</small></small>
+							<br>
+						<?php endif; ?>
+						<?= Lv7_Service_Text::asPrice($item->getTotalPrice(), 2) ?> р.
+					</td>
+					<td align="center">
+						<?php if ($item->canBeSentToCashbox): ?>
+							<?= $this->formCheckbox('cashbox_' . $item->getUid(), 1, array('checked' => ($item->getToCashbox() ? 1 : 0), 'class' => 'shop-basket-checkbox', 'onclick' => '$(\'#shop-basket-form-full\').submit();')) ?>
+						<?php endif; ?>
+					</td>
+					<td align="center"><a href="<?= Shop_Service_Config::getBackendScheme()->getBasketUrl() ?>?uid=<?= $item->getUid() ?>"
+						class="del"><?= $this->translate('удалить') ?></a></td>
+				</tr>
+			<?php endforeach; ?>
+			</tbody>
+			<tfoot>
+				<tr class="total">
+					<td colspan="5"><?= $this->translate('Итого') ?></td>
+					<td align="center"><?= $this->quantity ?></td>
+					<td align="right"><?= Lv7_Service_Text::asPrice($this->cost, 2) ?> р.</td>
+					<td align="center"><input type="checkbox" onclick="var commonCheckbox = $(this); $('.shop-basket-checkbox').each(function(){ $(this).prop('checked', commonCheckbox.prop('checked')); }); $('#shop-basket-form-full').submit(); return true;" <?= $allToCashbox ? 'checked' : '' ?>></td>
+					<td>&nbsp;</td>
+				</tr>
+			</tfoot>
+		</table>
+		<div class="text-right pt10">
+		<p>
+			<button type="submit" class="btn btn-default"><i class="fa fa-save"></i> <?= $this->translate('Сохранить изменения') ?></button>
+			<a href="/shop/backendbasket/clear" onclick="return confirm('Очистить корзину и перейти к новому поиску?');" class="btn btn-link"><i class="fa fa-trash-o"></i> Очистить корзину</a>
+			</p>
+		</div>
+	</div>
+	</form>
+
+	<div class="row">
+		<div class="col-md-12" style="margin-bottom: 25px;">
+        <div class="col-md-2 no-gutter" style="padding: 0px;">
+            <span>Тип клиента:</span>
+			<select class="form-control" name="faceType" id="faceType">
+				<option value="none">Выберите тип</option>
+				<option value="asort">Пополнение ассортимента</option>
+			  <option value="natural">Физическое лицо</option>
+			  <option value="legal">Юридическое лицо</option>
+			</select>
+        </div>
+
+		<?php
+		$paymentMethods = Shop_Service_Config::getScheme()->getPaymentMethods();
+		if (is_array($paymentMethods)):?>
+		<div class="col-md-2 no-gutter">
+			<span>Способ оплаты:</span>
+			<select class="form-control" name="paymentMethod" id="paymentMethod">
+				<option value="none">Выберите способ</option>
+			<?php foreach ($paymentMethods as $paymentMethod): ?>
+					<option value="<?= $paymentMethod->getId();?>"><?= $paymentMethod->getName(); ?></option>
+			<?php endforeach; ?>
+			</select>
+		</div>
+		<?php endif; ?>
+
+    </div>
+
+		<div class="col-md-2">
+			<p><button class="btn btn-default btn-block copy-to-clipboard"><i class="fa fa-copy"></i> копировать в буфер</button></p>
+			<textarea cols="20" rows="7" onfocus="this.select();" id="clip-data" class="form-control" placeholder="на кассу"><?= implode("\r\n", $warehouseBuffer) ?></textarea>
+		</div>
+		<div class="col-md-2 col-md-offset-1">
+			<a href="/shop/backendbasket/xml" class="btn btn-default btn-block"><i class="fa fa-file-code-o"></i> Скачать XML</a>
+		</div>
+		<div class="col-md-2" id="helpBtn" title="Для формирования заказа выберете Тип клиента и Способ оплаты"  data-toggle="tooltip" data-placement="top">
+			<a href="/admin/basket/createOrder?faceType=natural&paymentMethod=Cash" disabled id="createBtn" class="btn btn-primary btn-block" target="_blank"><i class="fa fa-check-square-o"></i> Сформировать заказ</a>
+		</div>
+		<div class="col-md-5 text-right">
+
+		</div>
+	</div>
+
+
+	<script>
+    var clipboard = new Clipboard('.copy-to-clipboard', {
+        text: function() {
+            return $('#clip-data').val();
+        }
+    });
+    var btnSubmit = $('#createBtn');
+    var selectFaceType = $('#faceType');
+    var selectPaymentMenthod = $('#paymentMethod');
+    var baseUrl = '/admin/basket/createOrder?';
+    var type = 'none';
+    var typePayment = 'none';
+    var helpBtn = $('#helpBtn');
+    var titleBtn = 'Для формирования заказа выберете Тип клиента и Способ оплаты';
+
+    $(selectPaymentMenthod).on('change', function() {
+  		typePayment = this.value;
+  		if (typePayment != 'none') {
+  			$(btnSubmit).attr("href", baseUrl + 'faceType=' + type + '&paymentMethod=' + typePayment);
+  		}
+  		if (type != 'none' && typePayment != 'none' ) {
+			$(btnSubmit).removeAttr('disabled');
+			$(helpBtn).removeAttr('title');
+		} else {
+			$(btnSubmit).attr('disabled','disabled');
+			$(helpBtn).attr('title', titleBtn);
+		}
+	});
+    $(selectFaceType).on('change', function() {
+  		type = this.value;
+  		if (typePayment == 'none' && type == 'asort') {
+			typePayment = 'Cash';
+			type = 'natural';
+  		}
+  		if (type != 'none' || type == 'asort') {
+  			$(btnSubmit).attr("href", baseUrl + 'faceType=' + type + '&paymentMethod=' + typePayment);
+  		}
+  		if (type != 'none' && typePayment != 'none' || type == 'asort' ) {
+			$(btnSubmit).removeAttr('disabled');
+			$(helpBtn).removeAttr('title');
+		} else {
+			$(btnSubmit).attr('disabled','disabled');
+			$(helpBtn).attr('title', titleBtn);
+		}
+	});
+
+
+
+    </script>
+
+
+<?php else: ?>
+<p><?= $this->translate('Корзина пока пуста') ?></p>
+<?php endif; ?>
+
+
+

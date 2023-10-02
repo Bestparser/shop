@@ -1,0 +1,25 @@
+<h3><?= $this->translate('Настройки магазина') ?></h3>
+
+<?php if (is_array($this->schemes) && count($this->schemes)) : ?>
+
+	<table class="ui-widget table-std">
+	<tr>
+		<th class="ui-widget-header ui-corner-all"><?= $this->translate('Название схемы') ?></th>
+		<th class="ui-widget-header ui-corner-all">&nbsp;</th>
+	</tr>
+	<?php foreach ($this->schemes as $item) : ?>
+		<tr>
+			<td><big><?= $item->getName() ?></big></td>
+			<td align="center" nowrap="nowrap">
+				<a href="<?= $this->url(array('scheme' => $item->getId()), 'shop::settingsForm') ?>" 
+					class="button-edit"><?= $this->translate('изменить') ?></a>
+			</td>
+		</tr>    
+	<?php endforeach; ?>
+	</table>
+	
+<?php else: ?>
+	
+	<p><?= $this->translate('Настроек магазина не найдено...') ?></p>
+
+<?php endif; ?>

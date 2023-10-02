@@ -1,0 +1,15 @@
+<form method="POST" action="/shop/backendbasket/update" class="shop-basket-form">
+<?= $this->formText('quantity', '{quantity}', array(
+	'size' => 7, 
+	'class' => 'shop-basket-input', 
+	'onfocus' => 'this.select()',
+	'autocomplete' => 'off')) ?>
+<?= $this->formSubmit('submit', 'OK', array('class' => 'shop-basket-button', 'title' => 'Добавить в корзину')) ?>
+<?= $this->formHidden('uid', '{uid}') ?>
+<?= $this->formHidden('old_quantity', '{quantity}') ?>
+<div class="clear"></div>
+<div class="shop-basket-in"><?= $this->translate('Товар в') ?> <a 
+	href="<?= Shop_Service_Config::getBackendScheme()->getBasketUrl() ?>"><?= $this->translate('Корзине') ?></a></div>
+<div class="shop-basket-confirm"></div>
+</form>
+
